@@ -7,7 +7,7 @@
     "express": "~3.0.6",
     "css-whitespace": "0.0.4",
     "rework": "~0.10.2",
-    "component-builder": "~0.6.1",
+    "component-builder": "~0.6.2",
     "rework-mixins": "~1.0.2",
     "debug": "~0.7.0"
   }
