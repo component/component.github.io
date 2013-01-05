@@ -1,0 +1,12 @@
+{
+  "name": "component.io",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "jade": "~0.27.7",
+    "express": "~3.0.6",
+    "css-whitespace": "0.0.4",
+    "rework": "~0.10.2",
+    "component-builder": "~0.6.1"
+  }
+}
