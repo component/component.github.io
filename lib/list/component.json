@@ -4,8 +4,7 @@
   "dependencies": {
     "visionmedia/superagent": "0.11.0",
     "component/domify": "*",
-    "component/reactive": "0.7.1",
-    "component/Simple-Grid": "0.0.1"
+    "component/reactive": "0.7.1"
   },
   "scripts": ["list.js", "view.js"],
   "styles": ["list.styl"],
