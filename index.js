@@ -6,6 +6,10 @@
 var express = require('express');
 var app = express();
 
+// settings
+
+app.set('view engine', 'jade');
+
 // middleware
 
 app.use(express.logger('dev'));
