@@ -8,6 +8,6 @@
     "yields/slug": "*"
   },
   "scripts": ["component.js", "menu.js"],
-  "styles": ["component.styl"],
+  "styles": ["component.styl", "menu.styl"],
   "main": "component.js"
 }
