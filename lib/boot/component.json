@@ -1,0 +1,7 @@
+{
+  "name": "boot",
+  "description": "bootstrap component",
+  "scripts": ["client.js"],
+  "styles": ["client.styl"],
+  "main": "client.js"
+}
