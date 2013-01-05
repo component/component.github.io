@@ -1,7 +1,8 @@
 
 # component.io
 
-  The [component.io](http://component.io) website.
+  The [component.io](http://component.io) website powered by [Express](http://expressjs.com)
+  and of course components.
 
 ## Running
 
