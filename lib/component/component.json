@@ -3,9 +3,11 @@
   "description": "component pages",
   "dependencies": {
     "visionmedia/superagent": "0.11.0",
-    "component/marked": "0.2.7"
+    "component/marked": "0.2.7",
+    "component/each": "*",
+    "yields/slug": "*"
   },
-  "scripts": ["component.js"],
+  "scripts": ["component.js", "menu.js"],
   "styles": ["component.styl"],
   "main": "component.js"
 }
