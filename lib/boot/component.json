@@ -1,7 +1,7 @@
 {
   "name": "boot",
   "description": "bootstrap component",
-  "local": ["list"],
+  "local": ["search"],
   "scripts": ["boot.js"],
   "styles": ["index.styl"],
   "images": [

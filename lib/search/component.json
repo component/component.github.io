@@ -1,0 +1,14 @@
+{
+  "name": "search",
+  "description": "component search",
+  "local": ["list"],
+  "dependencies": {
+    "visionmedia/superagent": "0.11.0",
+    "component/domify": "*",
+    "component/reactive": "0.7.1"
+  },
+  "scripts": ["search.js"],
+  "styles": ["search.styl"],
+  "templates": ["template.html"],
+  "main": "search.js"
+}

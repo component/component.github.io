@@ -2,7 +2,6 @@
   "name": "list",
   "description": "component listings",
   "dependencies": {
-    "visionmedia/superagent": "0.11.0",
     "component/domify": "*",
     "component/reactive": "0.7.1"
   },
