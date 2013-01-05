@@ -4,7 +4,7 @@
   The [component.io](http://component.io) website powered by [Express](http://expressjs.com)
   and of course components.
 
-  ![web components site screenshot](http://f.cl.ly/items/2R2D0n131B3o1t0e173F/site.png)
+  ![web components site screenshot](http://f.cl.ly/items/410J2r0Y1Q0m3q01182y/site.png)
 
 ## Running
 
