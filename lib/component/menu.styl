@@ -3,7 +3,6 @@ ul#toc
   fixed: top 15px right
   margin: 0
   padding: 0
-
   li
     list-style: none
     a
@@ -20,5 +19,11 @@ ul#toc
         background: rgba(0,0,0,.8)
       &:active
         background: rgba(0,0,0,.7)
+  li:first-child a
+    border-radius: 2px 0 0 0
+    padding-top: 15px
+  li:last-child a
+    border-radius: 0 0 0 2px
+    padding-bottom: 15px
   li.h2 a
     font-weight: bold
