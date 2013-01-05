@@ -7,6 +7,6 @@
   },
   "scripts": ["list.js", "view.js"],
   "styles": ["list.styl"],
-  "templates": ["view.html"],
+  "templates": ["template.html"],
   "main": "list.js"
 }
