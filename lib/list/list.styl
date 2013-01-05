@@ -25,8 +25,14 @@
   font-size: 12px
   color: #7f7f7f
 
+.component:hover .info
+  bottom: 0
+  opacity: 1
+
 .component .info
-  absolute: bottom left
+  absolute: bottom -30px left
+  opacity: 0
+  transition: opacity 300ms, bottom 300ms
   background: rgba(0,0,0,.85)
   color: white
   font-size: 12px
