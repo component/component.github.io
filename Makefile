@@ -1,5 +1,8 @@
 
-start:
+run: components
 	@NODE_PATH=lib node index
 
-.PHONY: start
+components:
+	@component install
+
+.PHONY: run

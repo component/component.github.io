@@ -2,3 +2,4 @@ node_modules
 public/build*
 public/app*
 .DS_Store
+components

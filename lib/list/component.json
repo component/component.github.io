@@ -2,7 +2,7 @@
   "name": "list",
   "description": "component listings",
   "dependencies": {
-    "superagent": "0.11.0"
+    "visionmedia/superagent": "0.11.0"
   },
   "scripts": ["list.js"],
   "styles": ["list.styl"],
