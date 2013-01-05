@@ -3,5 +3,9 @@
   "description": "bootstrap component",
   "scripts": ["client.js"],
   "styles": ["index.styl"],
+  "images": [
+    "images/logo.png",
+    "images/logo@2x.png"
+  ],
   "main": "client.js"
 }
