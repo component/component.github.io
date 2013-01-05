@@ -4,6 +4,8 @@
   The [component.io](http://component.io) website powered by [Express](http://expressjs.com)
   and of course components.
 
+  ![web components site screenshot](http://f.cl.ly/items/2Y2F2I3V3l46373q1F3O/site.png)
+
 ## Running
 
   To install clone the repo and run:
