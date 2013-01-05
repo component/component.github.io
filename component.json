@@ -1,4 +1,5 @@
 {
+  "name": "component.io",
   "paths": ["lib"],
   "locals": ["boot"]
 }
