@@ -1,11 +1,12 @@
 {
   "name": "boot",
   "description": "bootstrap component",
-  "scripts": ["client.js"],
+  "local": ["list"],
+  "scripts": ["boot.js"],
   "styles": ["index.styl"],
   "images": [
     "images/logo.png",
     "images/logo@2x.png"
   ],
-  "main": "client.js"
+  "main": "boot.js"
 }

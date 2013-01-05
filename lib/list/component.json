@@ -1,0 +1,7 @@
+{
+  "name": "list",
+  "description": "component listings",
+  "scripts": ["list.js"],
+  "styles": ["list.styl"],
+  "main": "list.js"
+}
