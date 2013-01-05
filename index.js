@@ -12,7 +12,6 @@ app.set('view engine', 'jade');
 
 // middleware
 
-app.use(express.favicon());
 app.use(express.logger('dev'));
 app.use(express.static('public'));
 
