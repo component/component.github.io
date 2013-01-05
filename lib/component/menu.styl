@@ -3,6 +3,7 @@ ul#toc
   fixed: top 15px right
   margin: 0
   padding: 0
+
   li
     list-style: none
     a
@@ -12,5 +13,12 @@ ul#toc
       text-align: right
       padding: 0 15px
       border: none
+      -webkit-font-smoothing: antialiased
+      background: rgba(0,0,0,.85)
+      color: white
+      &:hover
+        background: rgba(0,0,0,.8)
+      &:active
+        background: rgba(0,0,0,.7)
   li.h2 a
     font-weight: bold
