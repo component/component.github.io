@@ -5,4 +5,7 @@ run: components
 components:
 	@component install
 
-.PHONY: run
+clean:
+	@rm -fr components
+
+.PHONY: run clean
