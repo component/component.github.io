@@ -20,6 +20,7 @@ $ make
 ## Todo
 
   - rest of index page
+  - stats / graphs
   - individual component pages
   - dependency graphs
   - finish styling
