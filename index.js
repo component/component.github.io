@@ -16,7 +16,7 @@ app.use(express.logger('dev'));
 
 // mount
 
-app.use(require('./lib/main'));
+app.use(require('boot'));
 
 // listen
 
