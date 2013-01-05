@@ -1,0 +1,11 @@
+{
+  "name": "component",
+  "description": "component pages",
+  "dependencies": {
+    "visionmedia/superagent": "0.11.0",
+    "component/marked": "0.2.7"
+  },
+  "scripts": ["component.js"],
+  "styles": ["component.styl"],
+  "main": "component.js"
+}

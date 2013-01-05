@@ -18,6 +18,7 @@ app.use(express.static('public'));
 
 // mount
 
+app.use(require('component'));
 app.use(require('boot'));
 
 // listen
