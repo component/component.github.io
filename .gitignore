@@ -1,5 +1,6 @@
 node_modules
 public/build*
 public/app*
+public/boot*
 .DS_Store
 components
