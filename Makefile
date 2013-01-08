@@ -1,6 +1,6 @@
 
 run: components
-	@NODE_PATH=lib node index
+	@NODE_PATH=lib ./bin/component.io --port 4000
 
 components:
 	@component install
