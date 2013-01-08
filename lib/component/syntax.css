@@ -40,11 +40,12 @@ pre > code {
 
 /* code */
 
-.highlight pre {
+pre {
   width: 100%;
   background: white;
   padding: 0 5px;
   font-size: 12px;
+  margin-left: 10px;
 }
 
 .highlight .linenodiv {
