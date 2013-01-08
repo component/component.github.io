@@ -13,7 +13,7 @@ app.set('view engine', 'jade');
 // middleware
 
 app.use(express.logger('dev'));
-app.use(express.static('public'));
+app.use(express.static(__dirname + '/public'));
 
 // mount
 
