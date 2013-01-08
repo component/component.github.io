@@ -1,0 +1,11 @@
+{
+  "name": "error",
+  "description": "error display",
+  "dependencies": {
+    "component/domify": "*",
+    "component/reactive": "0.7.1"
+  },
+  "scripts": ["view.js"],
+  "templates": ["template.html"],
+  "main": "view.js"
+}
