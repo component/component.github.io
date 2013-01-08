@@ -7,6 +7,6 @@
     "yields/slug": "*"
   },
   "scripts": ["component.js", "menu.js"],
-  "styles": ["component.styl", "menu.styl"],
+  "styles": ["component.styl", "menu.styl", "syntax.css"],
   "main": "component.js"
 }
