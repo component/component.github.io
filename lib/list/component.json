@@ -6,8 +6,8 @@
     "component/domify": "*",
     "component/reactive": "0.7.1"
   },
-  "scripts": ["list.js", "view.js"],
+  "scripts": ["list.js", "view.js", "error-view.js"],
   "styles": ["list.styl"],
-  "templates": ["template.html"],
+  "templates": ["template.html", "error-template.html"],
   "main": "list.js"
 }
