@@ -13,6 +13,10 @@ program
   .option('-p, --port <n>', 'set port number [3000]', parseInt)
   .parse(process.argv);
 
+// title
+
+process.title = 'component.io';
+
 // listen
 
 var port = program.port || 3000;
