@@ -15,11 +15,6 @@
     "mkdirp": "~0.3.4",
     "peacock": "~0.2.0",
     "marked": "~0.2.7",
-    "commander": "~1.1.1",
-    "win-spawn": "~1.1.0"
-  },
-  "scripts": {
-    "postinstall": "win-spawn rm -fr components && component-install",
-    "start": "win-spawn ./bin/component.io --port 4000"
+    "commander": "~1.1.1"
   }
 }
