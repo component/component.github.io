@@ -1,4 +1,4 @@
-#!/usr/bin/env NODE_PATH=./lib node
+#!/usr/bin/env node
 
 /**
  * Module dependencies.
