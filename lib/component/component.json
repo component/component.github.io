@@ -3,6 +3,7 @@
   "description": "component pages",
   "dependencies": {
     "visionmedia/superagent": "0.12.4",
+    "component/domify": "*",
     "component/each": "*",
     "yields/slug": "*"
   },
