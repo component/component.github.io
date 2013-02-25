@@ -1,7 +1,5 @@
 # component.io
 
-  **N.B. This website has not yet been deployed.  In the mean time you can check out [component.jit.su](https://component.jit.su) (the outgoing website)**
-
   The [component.io](http://component.io) website powered by [Express](http://expressjs.com)
   and of course components.
 
