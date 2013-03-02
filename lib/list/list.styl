@@ -47,10 +47,14 @@
     width: 20%
     padding-right: 10px
 
-@media screen and (max-width: 950px)
-  .component
-    width: 40%
+@media (max-width: 800px)
+  .component .header
+    width: auto
 
-@media screen and (max-width: 700px)
-  .component
-    width: 90%
+  .component p
+    clear: both
+    padding-top: .75em
+
+@media (max-width: 450px)
+  .component .info
+    display: none
