@@ -3,9 +3,30 @@
   box-sizing: border-box
 
 body
-  padding: 75px
+  margin: 0
+  padding: 100px 0
   font: 14px/1.6 "Helvetica Neue", Helvetica, Arial, sans-serif
+  font-smoothing: antialiased
   color: #272727
+  text-align: center
+  overflow-y: scroll
+
+.wrapper
+  margin: 0 auto
+  text-align: left
+  max-width: 1100px
+  position: relative
+
+header
+  fixed: top left
+  z-index: 10
+  width: 100%
+  height: 110px
+  line-height: @height
+  padding: 30px 40px
+  border-bottom: 1px solid #ddd
+  box-shadow: 0 0 5px #eee
+  background: white
 
 #logo
   display: block
@@ -13,13 +34,25 @@ body
   overflow: hidden
   white-space: nowrap
   background: url(/boot/images/logo.png)
-  width: 272px
-  height: 69px
+  width: 213px
+  height: 55px
   &:hover
     border-bottom: none
 
+#menu
+  margin: 0
+  padding: 0
+  absolute: top 23px right 30px
+  line-height: 0
+  li
+    display: inline-block
+    padding: 0 40px
+    text-transform: uppercase
+    a
+      font-smoothing: antialiased
+
 a
-  color: #2ccdec
+  color: #99999b
   text-decoration: none
   &:hover
     border-bottom: 1px solid #ddd
@@ -45,10 +78,7 @@ p > code
   border: 1px solid #e9e9e9
   border-radius: 2px
 
-@media screen and (max-width: 900px)
-  body
-    padding: 20px;
-
-@media screen and (max-width: 450px)
-  body
-    padding: 0;
+@media screen and (max-width: 1100px)
+  #content
+    padding-left: 40px
+    padding-right: 40px

@@ -3,11 +3,12 @@
   "description": "bootstrap component",
   "dependencies": {
     "visionmedia/page.js": "1.3.3",
+    "matthewmueller/debounce": "*",
     "component/top": "*"
   },
   "local": ["search", "component"],
   "scripts": ["boot.js"],
-  "styles": ["index.styl"],
+  "styles": ["index.styl", "banner.styl"],
   "images": [
     "images/logo.png",
     "images/logo@2x.png"

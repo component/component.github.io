@@ -6,8 +6,21 @@ html
     meta(name='viewport', content='initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width')
   body
     include google.js
-    a#logo(href='/', title='Back to the index') component.js
-    #content
+    header
+      .wrapper
+        a#logo(href='/', title='component homepage') component.js
+        ul#menu
+          li: a(href='/') Home
+          li: a(href='/guides') Guides
+          li: a(href='/community') Community
+          li: a(href='/blog') Blog
+    section#banner
+      .wrapper
+        #quote.
+          the most <strong>flexible</strong>, <strong>modular</strong> foundation
+          for javascript web applications on the planet
+    .wrapper
+      section#content
     script(src='/app.js')
     script
       require('boot')
