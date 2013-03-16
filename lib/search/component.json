@@ -5,6 +5,7 @@
   "dependencies": {
     "visionmedia/superagent": "0.11.0",
     "component/reactive": "0.7.1",
+    "component/spinner": "*",
     "component/emitter": "*",
     "component/domify": "*"
   },
