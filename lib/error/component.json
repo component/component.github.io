@@ -3,7 +3,7 @@
   "description": "error display",
   "dependencies": {
     "component/domify": "*",
-    "component/reactive": "0.10.0"
+    "component/reactive": "0.10.1"
   },
   "scripts": ["view.js"],
   "templates": ["template.html"],
