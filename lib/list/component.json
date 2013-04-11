@@ -4,7 +4,7 @@
   "dependencies": {
     "component/type": "*",
     "component/domify": "*",
-    "component/reactive": "0.7.1"
+    "component/reactive": "0.10.0"
   },
   "scripts": ["list.js", "view.js"],
   "styles": ["list.styl"],
