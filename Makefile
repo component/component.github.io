@@ -1,9 +1,8 @@
-
 run: node_modules components
 	@NODE_PATH=lib ./bin/component.io
 
 node_modules: package.json
-	@npm i
+	@npm install
 
 components:
 	@component install
