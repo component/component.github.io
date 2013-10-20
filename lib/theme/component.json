@@ -1,0 +1,7 @@
+{
+  "name": "theme",
+  "description": "All of the theme-specific styles live here.",
+  "styles": [
+    "index.css"
+  ]
+}
