@@ -1,7 +1,10 @@
 {
   "name": "search",
-  "description": "component search",
-  "local": ["list", "error"],
+  "description": "Search widget, including results page.",
+  "local": [
+    "list",
+    "error"
+  ],
   "dependencies": {
     "visionmedia/superagent": "0.11.0",
     "component/reactive": "0.10.1",
@@ -9,8 +12,7 @@
     "component/emitter": "*",
     "component/domify": "*"
   },
-  "scripts": ["search.js"],
-  "styles": ["search.styl"],
-  "templates": ["template.html"],
-  "main": "search.js"
+  "scripts": ["index.js"],
+  "styles": ["index.css"],
+  "templates": ["index.html"]
 }

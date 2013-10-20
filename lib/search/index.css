@@ -1,0 +1,44 @@
+
+/**
+ * Search.
+ *
+ * .search
+ *   input.search-input
+ *   div.search-spinner
+ */
+
+.search {
+  position: fixed;
+  z-index: 1;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  overflow: hidden;
+  background-color: gray;
+}
+
+.search-input {
+  font-size: 3em;
+  font-weight: 100;
+  font-family: inherit;
+  padding: .5em;
+  border: none;
+  outline: none;
+  width: 100%;
+}
+
+.search-spinner {
+  position: absolute;
+  top: 1em;
+  right: 1em;
+}
+
+/**
+ * Small screens, reduce input size.
+ */
+
+@media (max-width: 480px) {
+  .search-input {
+    font-size: 1em;
+  }
+}

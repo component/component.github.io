@@ -2,9 +2,9 @@
   "name": "boot",
   "description": "bootstrap component",
   "dependencies": {
-    "visionmedia/page.js": "1.3.6",
-    "yields/k": "0.0.1",
-    "component/top": "*"
+    "component/top": "*",
+    "ianstormtaylor/router": "*",
+    "yields/k": "0.0.1"
   },
   "local": ["search", "component"],
   "scripts": ["boot.js"],
