@@ -9,7 +9,6 @@
     "component/domify": "*",
     "component/emitter": "*",
     "component/reactive": "*",
-    "component/spinner": "*",
     "component/type": "*",
     "segmentio/menu": "*",
     "visionmedia/superagent": "*"

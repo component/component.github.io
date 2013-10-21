@@ -17,5 +17,5 @@ app.use(express.static(__dirname + '/public'));
 
 // mount
 
-app.use(require('component'));
+app.use(require('component-page'));
 app.use(require('boot'));

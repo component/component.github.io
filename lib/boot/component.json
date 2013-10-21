@@ -15,7 +15,7 @@
     "boot.js"
   ],
   "styles": [
-    "index.styl"
+    "index.css"
   ],
   "images": [
     "images/logo.png",
