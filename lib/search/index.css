@@ -64,20 +64,13 @@
 }
 
 .search li {
-  background-color: white;
   margin-top: 1px;
+  background-color: #f7f7f7;
   transition: all .3s;
 }
 
 .search li:hover {
   cursor: pointer;
-}
-
-.search menu:hover li {
-  background-color: #f7f7f7;
-}
-
-.search menu:hover li:hover {
   background-color: white;
 }
 
