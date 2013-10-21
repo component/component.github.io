@@ -7,7 +7,17 @@
     "component/each": "*",
     "yields/slug": "*"
   },
-  "scripts": ["component.js", "menu.js"],
-  "styles": ["component.styl", "menu.styl", "syntax.css"],
+  "local": [
+    "prose"
+  ],
+  "scripts": [
+    "component.js",
+    "menu.js"
+  ],
+  "styles": [
+    "component.styl",
+    "menu.styl",
+    "syntax.css"
+  ],
   "main": "component.js"
 }
