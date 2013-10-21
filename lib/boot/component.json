@@ -2,7 +2,7 @@
   "name": "boot",
   "description": "bootstrap component",
   "dependencies": {
-    "component/top": "*",
+    "code42day/ga": "1.0.0",
     "ianstormtaylor/router": "*",
     "yields/k": "0.0.1"
   },

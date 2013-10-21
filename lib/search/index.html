@@ -1,7 +1,4 @@
 <div class="search">
-  <input class="search-input"
-         type="text"
-         placeholder="Search"
-         on-input="search"
-         accesskey="s">
+  <input class="search-input" type="text" placeholder="Search" on-input="onInput" on-focus="expand" accesskey="s">
+  <ul class="search-results-list" data-replace="replaceList"></ul>
 </div>

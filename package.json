@@ -17,6 +17,7 @@
     "peacock": "~0.2.0",
     "marked": "~0.2.7",
     "ghlink": "~0.1.2",
-    "commander": "~1.1.1"
+    "commander": "~1.1.1",
+    "rework-pure-css": "0.0.3"
   }
 }

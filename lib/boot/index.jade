@@ -1,13 +1,13 @@
 !!! 5
 html
   head
-    title component - modular javascript framework
+    title component
     link(rel='stylesheet', href='/app.css')
     meta(name='viewport', content='initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width')
   body
-    include google.js
-    a#logo(href='/', title='Back to the index') component.js
-    #content
+    header#header
+      a#logo(href='/', title='Back to the index') component.js
+    div#content
     script(src='/app.js')
     script
       require('boot')
