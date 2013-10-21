@@ -1,5 +1,5 @@
 {
   "name": "component.io",
   "paths": ["lib"],
-  "local": ["boot", "theme"]
+  "local": ["boot"]
 }

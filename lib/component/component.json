@@ -1,13 +1,12 @@
 {
   "name": "component",
-  "description": "component pages",
+  "description": "Simple component view.",
   "dependencies": {
-    "visionmedia/superagent": "0.12.4",
     "component/domify": "*",
-    "component/each": "*",
-    "yields/slug": "*"
+    "component/reactive": "*",
+    "component/type": "*"
   },
-  "scripts": ["component.js", "menu.js"],
-  "styles": ["component.styl", "menu.styl", "syntax.css"],
-  "main": "component.js"
+  "scripts": ["index.js"],
+  "styles": ["index.css"],
+  "templates": ["index.html"]
 }

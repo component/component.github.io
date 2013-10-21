@@ -1,14 +1,22 @@
 {
   "name": "boot",
-  "description": "bootstrap component",
+  "description": "Start the single-page site.",
   "dependencies": {
     "code42day/ga": "1.0.0",
+    "ianstormtaylor/reset": "*",
     "ianstormtaylor/router": "*",
     "yields/k": "0.0.1"
   },
-  "local": ["search", "component"],
-  "scripts": ["boot.js"],
-  "styles": ["index.styl"],
+  "local": [
+    "component-page",
+    "search"
+  ],
+  "scripts": [
+    "boot.js"
+  ],
+  "styles": [
+    "index.styl"
+  ],
   "images": [
     "images/logo.png",
     "images/logo@2x.png"

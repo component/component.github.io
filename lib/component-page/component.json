@@ -1,0 +1,13 @@
+{
+  "name": "component-page",
+  "description": "component pages",
+  "dependencies": {
+    "visionmedia/superagent": "0.12.4",
+    "component/domify": "*",
+    "component/each": "*",
+    "yields/slug": "*"
+  },
+  "scripts": ["component.js", "menu.js"],
+  "styles": ["component.styl", "menu.styl", "syntax.css"],
+  "main": "component.js"
+}

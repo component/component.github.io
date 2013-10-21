@@ -2,18 +2,19 @@
   "name": "search",
   "description": "Search widget, including results page.",
   "local": [
+    "component",
     "error"
   ],
   "dependencies": {
     "component/domify": "*",
     "component/emitter": "*",
-    "component/reactive": "0.10.1",
+    "component/reactive": "*",
     "component/spinner": "*",
     "component/type": "*",
-    "segmentio/list": "*",
-    "visionmedia/superagent": "0.11.0"
+    "segmentio/menu": "*",
+    "visionmedia/superagent": "*"
   },
-  "scripts": ["index.js", "item.js"],
-  "styles": ["index.css", "item.css"],
-  "templates": ["index.html", "item.html"]
+  "scripts": ["index.js"],
+  "styles": ["index.css"],
+  "templates": ["index.html"]
 }

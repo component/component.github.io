@@ -4,6 +4,9 @@
  *
  * .search(.expanded)(.collpased)
  *   input.search-input
+ *   menu.menu
+ *    li.component
+ *    ...
  *   div.search-spinner
  */
 
@@ -11,24 +14,25 @@
   position: fixed;
   z-index: 1;
   top: 0;
-  right: 0;
-  bottom: 0;
   left: 0;
-  background-color: gray;
-  transition: all .5s;
+  height: 100%;
+  width: 100%;
+  background-color: #eee;
+  transition: all .3s;
   transform: translateY(100%);
 }
 
 .search-input {
-  position: relative;
+  position: absolute;
+  z-index: 1;
+  width: 100%;
+  margin: 0;
+  padding: .5em;
+  outline: none;
+  border: none;
+  border-top: 1px solid lightgray;
   font-weight: 100;
   font-family: inherit;
-  padding: .5em;
-  border: none;
-  outline: none;
-  margin: 0;
-  width: 100%;
-  transition: all .5s;
 }
 
 .search-spinner {
@@ -38,15 +42,47 @@
 }
 
 /**
- * Expanded.
+ * Menu.
+ */
+
+.search menu {
+  height: 100%;
+  margin-top: 6.6em;
+  overflow-y: scroll;
+}
+
+.search li {
+  background-color: white;
+  margin-top: 1px;
+  transition: all .3s;
+}
+
+.search li:hover {
+  cursor: pointer;
+}
+
+.search menu:hover li {
+  background-color: #f7f7f7;
+}
+
+.search menu:hover li:hover {
+  background-color: white;
+}
+
+/**
+ * Expanded state.
  */
 
 .search.expanded {
   transform: translateY(0);
 }
 
-.search:not(.expanded) .search-input {
-  transform: translateY(-100%);
+.search:not(.expanded) {
+  margin-top: -6.6em; /* make the input stick out */
+}
+
+.search.expanded .search-input {
+  border-top-color: white;
 }
 
 /**
