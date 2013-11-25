@@ -15,6 +15,11 @@
     "mkdirp": "~0.3.4",
     "peacock": "~0.2.0",
     "marked": "~0.2.7",
+    "ghlink": "~0.1.2",
     "commander": "~1.1.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/component/component.io.git"
   }
 }
