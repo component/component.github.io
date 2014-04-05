@@ -10,16 +10,15 @@ body {
 
 #logo {
   display: block;
-  text-indent: 100%;
-  overflow: hidden;
-  white-space: nowrap;
-  background: url(/boot/images/logo.png);
-  width: 272px;
-  height: 69px;
+  width: 270px;
+  height: 60px;
 }
 
-#logo:hover {
-  border-bottom: none;
+#logo > div {
+  height: 100%;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 a {

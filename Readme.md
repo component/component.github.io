@@ -1,20 +1,21 @@
 # component.io
 
-  The [component.io](http://component.io) website powered by [Express](http://expressjs.com)
-  and of course components.
+  The [component.io](http://component.io) website powered by [Component](https://github.com/component/component).
 
   ![web components site screenshot](http://f.cl.ly/items/410J2r0Y1Q0m3q01182y/site.png)
 
 ## Running
 
-  To install clone the repo and run:
+  Set up the builder:
 
 ```
-$ npm install
+$ npm i -g component@"^1.0.0"
+$ component build --watch
 ```
 
-  To install the components and run the application execute:
+  Then serve the current static page:
 
 ```
-$ make
+$ npm i -g serve@"^1.4.0"
+$ serve .
 ```

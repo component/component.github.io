@@ -1,4 +1,24 @@
 
+/**
+ * Component
+ */
+
+.logo[data-logo="Component"] {
+  width: 5.213114754em;
+  /* (3.18/0.61) * (1) - 0 */
+}
+
+.logo[data-logo="Component"] > * {
+  background-image: url(logo/component/0.0.1/images/logo.svg);
+  margin: 0;
+}
+
+.logo[data-logo="Component"].monochromatic > * {
+  background-image: url(logo/component/0.0.1/images/logo-monochromatic.svg);
+}
+
+
+
 #back-to-top {
   position: fixed;
   bottom: 10px;
@@ -383,10 +403,8 @@ pre {
 
 
 * {
-  -o-box-sizing: border-box;
-  -ms-box-sizing: border-box;
-  -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
   box-sizing: border-box;
 }
 
@@ -398,16 +416,16 @@ body {
 
 #logo {
   display: block;
-  text-indent: 100%;
-  overflow: hidden;
-  white-space: nowrap;
-  background: url(url(/boot/images/logo.png));
-  width: 272px;
-  height: 69px;
+  width: 270px;
+  height: 60px;
 }
 
-#logo:hover {
-  border-bottom: none;
+#logo > div {
+  height: 100%;
+  -webkit-background-size: contain;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 a {
@@ -458,11 +476,4 @@ p > code {
   }
 }
 
-@media (min--moz-device-pixel-ratio: 1.5), (-o-min-device-pixel-ratio: 3/2), (-webkit-min-device-pixel-ratio: 1.5), (min-device-pixel-ratio: 1.5), (min-resolution: 144dpi), (min-resolution: 1.5dppx) {
-  #logo {
-    background-image: url("url(/boot/images/logo@2x.png)");
-    -webkit-background-size: contain;
-    background-size: contain;
-  }
-}
 
