@@ -1,5 +1,6 @@
 {
   "name": "component.io",
+  "private": true,
   "paths": ["lib"],
-  "local": ["boot"]
+  "locals": ["boot"]
 }

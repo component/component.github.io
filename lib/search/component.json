@@ -1,7 +1,5 @@
 {
-  "name": "search",
-  "description": "component search",
-  "local": ["list", "error"],
+  "locals": ["list", "error"],
   "dependencies": {
     "visionmedia/superagent": "0.11.0",
     "component/reactive": "0.10.1",
@@ -11,6 +9,5 @@
   },
   "scripts": ["search.js"],
   "styles": ["search.styl"],
-  "templates": ["template.html"],
-  "main": "search.js"
+  "templates": ["template.html"]
 }
