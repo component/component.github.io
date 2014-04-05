@@ -6,5 +6,5 @@
     "yields/slug": "*"
   },
   "scripts": ["component.js", "menu.js"],
-  "styles": ["component.styl", "menu.styl", "syntax.css"]
+  "styles": ["component.css", "menu.css", "syntax.css"]
 }

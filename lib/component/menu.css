@@ -1,0 +1,57 @@
+ul#toc {
+  position: fixed;
+  top: 15px;
+  right: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 100px;
+  max-width: 200px;
+  opacity: 0.9;
+  z-index: 1;
+  transition: 250ms right, 250ms opacity;
+}
+
+ul#toc:hover {
+  opacity: 1;
+}
+
+ul#toc li a:hover {
+  background: rgba(0, 0, 0, .8);
+}
+
+ul#toc li a:active {
+  background: rgba(0, 0, 0, .7);
+}
+
+ul#toc li a {
+  display: block;
+  width: 100%;
+  font-size: 12px;
+  padding: 0 15px;
+  border: none;
+  -webkit-font-smoothing: antialiased;
+  background: rgba(0, 0, 0, .85);
+  color: white;
+}
+
+ul#toc li {
+  list-style: none;
+}
+
+ul#toc li:first-child a {
+  border-radius: 2px 0 0 0;
+  padding-top: 15px;
+}
+
+ul#toc li:last-child a {
+  border-radius: 0 0 0 2px;
+  padding-bottom: 15px;
+}
+
+ul#toc li.h2 a {
+  font-weight: bold;
+}
+
+ul#toc li.h3 a {
+  padding-left: 25px;
+}

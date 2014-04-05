@@ -6,10 +6,9 @@
   },
   "locals": ["search", "component"],
   "scripts": ["boot.js"],
-  "styles": ["index.styl"],
+  "styles": ["index.css"],
   "images": [
     "images/logo.png",
     "images/logo@2x.png"
-  ],
-  "main": "boot.js"
+  ]
 }

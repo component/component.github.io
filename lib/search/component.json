@@ -8,6 +8,6 @@
     "component/domify": "*"
   },
   "scripts": ["search.js"],
-  "styles": ["search.styl"],
+  "styles": ["search.css"],
   "templates": ["template.html"]
 }

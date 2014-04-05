@@ -5,6 +5,6 @@
     "component/reactive": "0.10.1"
   },
   "scripts": ["list.js", "view.js"],
-  "styles": ["list.styl"],
+  "styles": ["list.css"],
   "templates": ["template.html"]
 }
