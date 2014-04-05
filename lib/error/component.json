@@ -1,8 +1,12 @@
 {
   "dependencies": {
-    "component/domify": "*",
-    "component/reactive": "0.10.1"
+    "component/domify": "1.2.2",
+    "component/reactive": "1.1.0"
   },
-  "scripts": ["view.js"],
-  "templates": ["template.html"]
+  "scripts": [
+    "view.js"
+  ],
+  "templates": [
+    "template.html"
+  ]
 }

@@ -1,10 +1,17 @@
 {
   "dependencies": {
-    "component/type": "*",
-    "component/domify": "*",
-    "component/reactive": "0.10.1"
+    "component/type": "1.0.0",
+    "component/domify": "1.2.2",
+    "component/reactive": "1.1.0"
   },
-  "scripts": ["list.js", "view.js"],
-  "styles": ["list.css"],
-  "templates": ["template.html"]
+  "scripts": [
+    "list.js",
+    "view.js"
+  ],
+  "styles": [
+    "list.css"
+  ],
+  "templates": [
+    "template.html"
+  ]
 }

@@ -1,13 +1,22 @@
 {
-  "locals": ["list", "error"],
+  "locals": [
+    "list",
+    "error"
+  ],
   "dependencies": {
-    "visionmedia/superagent": "0.11.0",
-    "component/reactive": "0.10.1",
-    "component/spinner": "*",
-    "component/emitter": "*",
-    "component/domify": "*"
+    "visionmedia/superagent": "0.17.0",
+    "component/reactive": "1.1.0",
+    "component/spinner": "1.0.0",
+    "component/emitter": "1.1.2",
+    "component/domify": "1.2.2"
   },
-  "scripts": ["search.js"],
-  "styles": ["search.css"],
-  "templates": ["template.html"]
+  "scripts": [
+    "search.js"
+  ],
+  "styles": [
+    "search.css"
+  ],
+  "templates": [
+    "template.html"
+  ]
 }
