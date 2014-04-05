@@ -11,10 +11,10 @@
     "component/domify": "1.2.2"
   },
   "scripts": [
-    "search.js"
+    "index.js"
   ],
   "styles": [
-    "search.css"
+    "index.css"
   ],
   "templates": [
     "template.html"

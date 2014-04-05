@@ -10,7 +10,7 @@
     "component"
   ],
   "scripts": [
-    "boot.js"
+    "index.js"
   ],
   "styles": [
     "index.css"

@@ -1,17 +1,29 @@
-!!! 5
-html
-  head
-    title component - modular javascript framework
-    link(rel='stylesheet', href='/app.css')
-    meta(name='viewport', content='initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width')
-    script
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>component - modular javascript framework</title>
+    <link rel="stylesheet" href="/build/build.css">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no, width=device-width">
+    <script>
       window.analytics||(window.analytics=[]),window.analytics.methods=["identify","track","trackLink","trackForm","trackClick","trackSubmit","page","pageview","ab","alias","ready","group","on","once","off"],window.analytics.factory=function(a){return function(){var t=Array.prototype.slice.call(arguments);return t.unshift(a),window.analytics.push(t),window.analytics}};for(var i=0;i<window.analytics.methods.length;i++){var method=window.analytics.methods[i];window.analytics[method]=window.analytics.factory(method)}window.analytics.load=function(a){var t=document.createElement("script");t.type="text/javascript",t.async=!0,t.src=("https:"===document.location.protocol?"https://":"http://")+"d2dq2ahtl5zl1z.cloudfront.net/analytics.js/v1/"+a+"/analytics.min.js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(t,n)},window.analytics.SNIPPET_VERSION="2.0.6",
       window.analytics.load("716zf0z1qm"),
       window.analytics.page();
-  body
-    include google.js
-    a#logo(href='/', title='Back to the index') component.js
-    #content
-    script(src='/app.js')
-    script
-      require('boot')
+    </script>
+  </head>
+  <body>
+    <script>
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-38709036-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+    <a id="logo" href="/" title="Back to the index">component.js</a>
+    <div id="content"></div>
+    <script src="/build/build.js"></script>
+  </body>
+</html>
