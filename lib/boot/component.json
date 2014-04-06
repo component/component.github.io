@@ -6,6 +6,7 @@
     "component/top": "0.0.2"
   },
   "locals": [
+    "crawler",
     "search",
     "component"
   ],
