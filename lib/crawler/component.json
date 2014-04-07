@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "visionmedia/superagent": "0.17.0"
-  },
-  "scripts": [
-    "index.js"
-  ]
-}
