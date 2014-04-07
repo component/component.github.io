@@ -6,6 +6,8 @@
 
   If you want to help improve the search algorithm, please visit [search.js](https://github.com/component/search.js).
 
+  __component.io needs a redesign!__ Please let us know if you're interested in contributing!
+
 ## Running
 
   Set up the builder:
