@@ -4,6 +4,8 @@
 
   ![web components site screenshot](http://f.cl.ly/items/410J2r0Y1Q0m3q01182y/site.png)
 
+  If you want to help improve the search algorithm, please visit [search.js](https://github.com/component/search.js).
+
 ## Running
 
   Set up the builder:
