@@ -53,392 +53,6 @@ require.define = function (name, exports) {
   };
 };
 
-require.register("component~event@0.1.0", function (exports, module) {
-
-/**
- * Bind `el` event `type` to `fn`.
- *
- * @param {Element} el
- * @param {String} type
- * @param {Function} fn
- * @param {Boolean} capture
- * @return {Function}
- * @api public
- */
-
-exports.bind = function(el, type, fn, capture){
-  if (el.addEventListener) {
-    el.addEventListener(type, fn, capture);
-  } else {
-    el.attachEvent('on' + type, fn);
-  }
-  return fn;
-};
-
-/**
- * Unbind `el` event `type`'s callback `fn`.
- *
- * @param {Element} el
- * @param {String} type
- * @param {Function} fn
- * @param {Boolean} capture
- * @return {Function}
- * @api public
- */
-
-exports.unbind = function(el, type, fn, capture){
-  if (el.removeEventListener) {
-    el.removeEventListener(type, fn, capture);
-  } else {
-    el.detachEvent('on' + type, fn);
-  }
-  return fn;
-};
-
-});
-
-require.register("matthewmueller~debounce@0.0.1", function (exports, module) {
-/**
- * Debounce
- *
- * Returns a function, that, as long as it continues to be invoked, will not
- * be triggered. The function will be called after it stops being called for
- * N milliseconds. If `immediate` is passed, trigger the function on the
- * leading edge, instead of the trailing.
- *
- * @param {Function} func
- * @param {Number} wait
- * @param {Boolean} immediate
- * @return {Function}
- */
-
-module.exports = function(func, wait, immediate) {
-  var timeout, result;
-  return function() {
-    var context = this, args = arguments;
-    var later = function() {
-      timeout = null;
-      if (!immediate) result = func.apply(context, args);
-    };
-    var callNow = immediate && !timeout;
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-    if (callNow) result = func.apply(context, args);
-    return result;
-  };
-};
-
-});
-
-require.register("component~domify@1.0.0", function (exports, module) {
-
-/**
- * Expose `parse`.
- */
-
-module.exports = parse;
-
-/**
- * Wrap map from jquery.
- */
-
-var map = {
-  option: [1, '<select multiple="multiple">', '</select>'],
-  optgroup: [1, '<select multiple="multiple">', '</select>'],
-  legend: [1, '<fieldset>', '</fieldset>'],
-  thead: [1, '<table>', '</table>'],
-  tbody: [1, '<table>', '</table>'],
-  tfoot: [1, '<table>', '</table>'],
-  colgroup: [1, '<table>', '</table>'],
-  caption: [1, '<table>', '</table>'],
-  tr: [2, '<table><tbody>', '</tbody></table>'],
-  td: [3, '<table><tbody><tr>', '</tr></tbody></table>'],
-  th: [3, '<table><tbody><tr>', '</tr></tbody></table>'],
-  col: [2, '<table><tbody></tbody><colgroup>', '</colgroup></table>'],
-  _default: [0, '', '']
-};
-
-/**
- * Parse `html` and return the children.
- *
- * @param {String} html
- * @return {Array}
- * @api private
- */
-
-function parse(html) {
-  if ('string' != typeof html) throw new TypeError('String expected');
-
-  // tag name
-  var m = /<([\w:]+)/.exec(html);
-  if (!m) throw new Error('No elements were generated.');
-  var tag = m[1];
-
-  // body support
-  if (tag == 'body') {
-    var el = document.createElement('html');
-    el.innerHTML = html;
-    return el.removeChild(el.lastChild);
-  }
-
-  // wrap map
-  var wrap = map[tag] || map._default;
-  var depth = wrap[0];
-  var prefix = wrap[1];
-  var suffix = wrap[2];
-  var el = document.createElement('div');
-  el.innerHTML = prefix + html + suffix;
-  while (depth--) el = el.lastChild;
-
-  var els = el.children;
-  if (1 == els.length) {
-    return el.removeChild(els[0]);
-  }
-
-  var fragment = document.createDocumentFragment();
-  while (els.length) {
-    fragment.appendChild(el.removeChild(els[0]));
-  }
-
-  return fragment;
-}
-
-});
-
-require.register("component~domify@1.2.1", function (exports, module) {
-
-/**
- * Expose `parse`.
- */
-
-module.exports = parse;
-
-/**
- * Wrap map from jquery.
- */
-
-var map = {
-  legend: [1, '<fieldset>', '</fieldset>'],
-  tr: [2, '<table><tbody>', '</tbody></table>'],
-  col: [2, '<table><tbody></tbody><colgroup>', '</colgroup></table>'],
-  _default: [0, '', '']
-};
-
-map.td =
-map.th = [3, '<table><tbody><tr>', '</tr></tbody></table>'];
-
-map.option =
-map.optgroup = [1, '<select multiple="multiple">', '</select>'];
-
-map.thead =
-map.tbody =
-map.colgroup =
-map.caption =
-map.tfoot = [1, '<table>', '</table>'];
-
-map.text =
-map.circle =
-map.ellipse =
-map.line =
-map.path =
-map.polygon =
-map.polyline =
-map.rect = [1, '<svg xmlns="http://www.w3.org/2000/svg" version="1.1">','</svg>'];
-
-/**
- * Parse `html` and return the children.
- *
- * @param {String} html
- * @return {Array}
- * @api private
- */
-
-function parse(html) {
-  if ('string' != typeof html) throw new TypeError('String expected');
-  
-  // tag name
-  var m = /<([\w:]+)/.exec(html);
-  if (!m) return document.createTextNode(html);
-
-  html = html.replace(/^\s+|\s+$/g, ''); // Remove leading/trailing whitespace
-
-  var tag = m[1];
-
-  // body support
-  if (tag == 'body') {
-    var el = document.createElement('html');
-    el.innerHTML = html;
-    return el.removeChild(el.lastChild);
-  }
-
-  // wrap map
-  var wrap = map[tag] || map._default;
-  var depth = wrap[0];
-  var prefix = wrap[1];
-  var suffix = wrap[2];
-  var el = document.createElement('div');
-  el.innerHTML = prefix + html + suffix;
-  while (depth--) el = el.lastChild;
-
-  // one element
-  if (el.firstChild == el.lastChild) {
-    return el.removeChild(el.firstChild);
-  }
-
-  // several elements
-  var fragment = document.createDocumentFragment();
-  while (el.firstChild) {
-    fragment.appendChild(el.removeChild(el.firstChild));
-  }
-
-  return fragment;
-}
-
-});
-
-require.register("component~domify@1.2.2", function (exports, module) {
-
-/**
- * Expose `parse`.
- */
-
-module.exports = parse;
-
-/**
- * Wrap map from jquery.
- */
-
-var map = {
-  legend: [1, '<fieldset>', '</fieldset>'],
-  tr: [2, '<table><tbody>', '</tbody></table>'],
-  col: [2, '<table><tbody></tbody><colgroup>', '</colgroup></table>'],
-  _default: [0, '', '']
-};
-
-map.td =
-map.th = [3, '<table><tbody><tr>', '</tr></tbody></table>'];
-
-map.option =
-map.optgroup = [1, '<select multiple="multiple">', '</select>'];
-
-map.thead =
-map.tbody =
-map.colgroup =
-map.caption =
-map.tfoot = [1, '<table>', '</table>'];
-
-map.text =
-map.circle =
-map.ellipse =
-map.line =
-map.path =
-map.polygon =
-map.polyline =
-map.rect = [1, '<svg xmlns="http://www.w3.org/2000/svg" version="1.1">','</svg>'];
-
-/**
- * Parse `html` and return the children.
- *
- * @param {String} html
- * @return {Array}
- * @api private
- */
-
-function parse(html) {
-  if ('string' != typeof html) throw new TypeError('String expected');
-  
-  // tag name
-  var m = /<([\w:]+)/.exec(html);
-  if (!m) return document.createTextNode(html);
-
-  html = html.replace(/^\s+|\s+$/g, ''); // Remove leading/trailing whitespace
-
-  var tag = m[1];
-
-  // body support
-  if (tag == 'body') {
-    var el = document.createElement('html');
-    el.innerHTML = html;
-    return el.removeChild(el.lastChild);
-  }
-
-  // wrap map
-  var wrap = map[tag] || map._default;
-  var depth = wrap[0];
-  var prefix = wrap[1];
-  var suffix = wrap[2];
-  var el = document.createElement('div');
-  el.innerHTML = prefix + html + suffix;
-  while (depth--) el = el.lastChild;
-
-  // one element
-  if (el.firstChild == el.lastChild) {
-    return el.removeChild(el.firstChild);
-  }
-
-  // several elements
-  var fragment = document.createDocumentFragment();
-  while (el.firstChild) {
-    fragment.appendChild(el.removeChild(el.firstChild));
-  }
-
-  return fragment;
-}
-
-});
-
-require.register("component~top@0.0.2", function (exports, module) {
-
-/**
- * Module dependencies.
- */
-
-var debounce = require("matthewmueller~debounce@0.0.1")
-  , html = require("component~top@0.0.2/template.js")
-  , domify = require("component~domify@1.0.0")
-  , event = require("component~event@0.1.0")
-
-/**
- * Expose `top`.
- */
-
-module.exports = top;
-
-/**
- * Add back-to-top link.
- *
- * @api public
- */
-
-function top() {
-  var el = domify(html);
-  var height = window.innerHeight;
-
-  function onscroll() {
-    var top = document.body.scrollTop;
-    if (top < height / 2) return hide();
-    show();
-  }
-
-  function show() {
-    el.className = 'show';
-  }
-
-  function hide() {
-    el.className = '';
-  }
-
-  event.bind(window, 'scroll', debounce(onscroll, 50));
-  document.body.appendChild(el);
-}
-
-});
-
-require.register("component~top@0.0.2/template.js", function (exports, module) {
-module.exports = '<a href="#" id="back-to-top"></a>\n';
-
-});
-
 require.register("yields~keycode@1.0.0", function (exports, module) {
 
 /**
@@ -548,6 +162,50 @@ function sequence(keys, ms, fn){
     seq = [];
     i = 0;
   }
+};
+
+});
+
+require.register("component~event@0.1.0", function (exports, module) {
+
+/**
+ * Bind `el` event `type` to `fn`.
+ *
+ * @param {Element} el
+ * @param {String} type
+ * @param {Function} fn
+ * @param {Boolean} capture
+ * @return {Function}
+ * @api public
+ */
+
+exports.bind = function(el, type, fn, capture){
+  if (el.addEventListener) {
+    el.addEventListener(type, fn, capture);
+  } else {
+    el.attachEvent('on' + type, fn);
+  }
+  return fn;
+};
+
+/**
+ * Unbind `el` event `type`'s callback `fn`.
+ *
+ * @param {Element} el
+ * @param {String} type
+ * @param {Function} fn
+ * @param {Boolean} capture
+ * @return {Function}
+ * @api public
+ */
+
+exports.unbind = function(el, type, fn, capture){
+  if (el.removeEventListener) {
+    el.removeEventListener(type, fn, capture);
+  } else {
+    el.detachEvent('on' + type, fn);
+  }
+  return fn;
 };
 
 });
@@ -938,29 +596,345 @@ function eql(a, b){
 
 });
 
-require.register("component~query@0.0.1", function (exports, module) {
+require.register("matthewmueller~debounce@0.0.1", function (exports, module) {
+/**
+ * Debounce
+ *
+ * Returns a function, that, as long as it continues to be invoked, will not
+ * be triggered. The function will be called after it stops being called for
+ * N milliseconds. If `immediate` is passed, trigger the function on the
+ * leading edge, instead of the trailing.
+ *
+ * @param {Function} func
+ * @param {Number} wait
+ * @param {Boolean} immediate
+ * @return {Function}
+ */
 
-function one(selector, el) {
-  return el.querySelector(selector);
+module.exports = function(func, wait, immediate) {
+  var timeout, result;
+  return function() {
+    var context = this, args = arguments;
+    var later = function() {
+      timeout = null;
+      if (!immediate) result = func.apply(context, args);
+    };
+    var callNow = immediate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) result = func.apply(context, args);
+    return result;
+  };
+};
+
+});
+
+require.register("component~domify@1.0.0", function (exports, module) {
+
+/**
+ * Expose `parse`.
+ */
+
+module.exports = parse;
+
+/**
+ * Wrap map from jquery.
+ */
+
+var map = {
+  option: [1, '<select multiple="multiple">', '</select>'],
+  optgroup: [1, '<select multiple="multiple">', '</select>'],
+  legend: [1, '<fieldset>', '</fieldset>'],
+  thead: [1, '<table>', '</table>'],
+  tbody: [1, '<table>', '</table>'],
+  tfoot: [1, '<table>', '</table>'],
+  colgroup: [1, '<table>', '</table>'],
+  caption: [1, '<table>', '</table>'],
+  tr: [2, '<table><tbody>', '</tbody></table>'],
+  td: [3, '<table><tbody><tr>', '</tr></tbody></table>'],
+  th: [3, '<table><tbody><tr>', '</tr></tbody></table>'],
+  col: [2, '<table><tbody></tbody><colgroup>', '</colgroup></table>'],
+  _default: [0, '', '']
+};
+
+/**
+ * Parse `html` and return the children.
+ *
+ * @param {String} html
+ * @return {Array}
+ * @api private
+ */
+
+function parse(html) {
+  if ('string' != typeof html) throw new TypeError('String expected');
+
+  // tag name
+  var m = /<([\w:]+)/.exec(html);
+  if (!m) throw new Error('No elements were generated.');
+  var tag = m[1];
+
+  // body support
+  if (tag == 'body') {
+    var el = document.createElement('html');
+    el.innerHTML = html;
+    return el.removeChild(el.lastChild);
+  }
+
+  // wrap map
+  var wrap = map[tag] || map._default;
+  var depth = wrap[0];
+  var prefix = wrap[1];
+  var suffix = wrap[2];
+  var el = document.createElement('div');
+  el.innerHTML = prefix + html + suffix;
+  while (depth--) el = el.lastChild;
+
+  var els = el.children;
+  if (1 == els.length) {
+    return el.removeChild(els[0]);
+  }
+
+  var fragment = document.createDocumentFragment();
+  while (els.length) {
+    fragment.appendChild(el.removeChild(els[0]));
+  }
+
+  return fragment;
 }
 
-exports = module.exports = function(selector, el){
-  el = el || document;
-  return one(selector, el);
+});
+
+require.register("component~domify@1.2.1", function (exports, module) {
+
+/**
+ * Expose `parse`.
+ */
+
+module.exports = parse;
+
+/**
+ * Wrap map from jquery.
+ */
+
+var map = {
+  legend: [1, '<fieldset>', '</fieldset>'],
+  tr: [2, '<table><tbody>', '</tbody></table>'],
+  col: [2, '<table><tbody></tbody><colgroup>', '</colgroup></table>'],
+  _default: [0, '', '']
 };
 
-exports.all = function(selector, el){
-  el = el || document;
-  return el.querySelectorAll(selector);
+map.td =
+map.th = [3, '<table><tbody><tr>', '</tr></tbody></table>'];
+
+map.option =
+map.optgroup = [1, '<select multiple="multiple">', '</select>'];
+
+map.thead =
+map.tbody =
+map.colgroup =
+map.caption =
+map.tfoot = [1, '<table>', '</table>'];
+
+map.text =
+map.circle =
+map.ellipse =
+map.line =
+map.path =
+map.polygon =
+map.polyline =
+map.rect = [1, '<svg xmlns="http://www.w3.org/2000/svg" version="1.1">','</svg>'];
+
+/**
+ * Parse `html` and return the children.
+ *
+ * @param {String} html
+ * @return {Array}
+ * @api private
+ */
+
+function parse(html) {
+  if ('string' != typeof html) throw new TypeError('String expected');
+  
+  // tag name
+  var m = /<([\w:]+)/.exec(html);
+  if (!m) return document.createTextNode(html);
+
+  html = html.replace(/^\s+|\s+$/g, ''); // Remove leading/trailing whitespace
+
+  var tag = m[1];
+
+  // body support
+  if (tag == 'body') {
+    var el = document.createElement('html');
+    el.innerHTML = html;
+    return el.removeChild(el.lastChild);
+  }
+
+  // wrap map
+  var wrap = map[tag] || map._default;
+  var depth = wrap[0];
+  var prefix = wrap[1];
+  var suffix = wrap[2];
+  var el = document.createElement('div');
+  el.innerHTML = prefix + html + suffix;
+  while (depth--) el = el.lastChild;
+
+  // one element
+  if (el.firstChild == el.lastChild) {
+    return el.removeChild(el.firstChild);
+  }
+
+  // several elements
+  var fragment = document.createDocumentFragment();
+  while (el.firstChild) {
+    fragment.appendChild(el.removeChild(el.firstChild));
+  }
+
+  return fragment;
+}
+
+});
+
+require.register("component~domify@1.2.2", function (exports, module) {
+
+/**
+ * Expose `parse`.
+ */
+
+module.exports = parse;
+
+/**
+ * Wrap map from jquery.
+ */
+
+var map = {
+  legend: [1, '<fieldset>', '</fieldset>'],
+  tr: [2, '<table><tbody>', '</tbody></table>'],
+  col: [2, '<table><tbody></tbody><colgroup>', '</colgroup></table>'],
+  _default: [0, '', '']
 };
 
-exports.engine = function(obj){
-  if (!obj.one) throw new Error('.one callback required');
-  if (!obj.all) throw new Error('.all callback required');
-  one = obj.one;
-  exports.all = obj.all;
-};
+map.td =
+map.th = [3, '<table><tbody><tr>', '</tr></tbody></table>'];
 
+map.option =
+map.optgroup = [1, '<select multiple="multiple">', '</select>'];
+
+map.thead =
+map.tbody =
+map.colgroup =
+map.caption =
+map.tfoot = [1, '<table>', '</table>'];
+
+map.text =
+map.circle =
+map.ellipse =
+map.line =
+map.path =
+map.polygon =
+map.polyline =
+map.rect = [1, '<svg xmlns="http://www.w3.org/2000/svg" version="1.1">','</svg>'];
+
+/**
+ * Parse `html` and return the children.
+ *
+ * @param {String} html
+ * @return {Array}
+ * @api private
+ */
+
+function parse(html) {
+  if ('string' != typeof html) throw new TypeError('String expected');
+  
+  // tag name
+  var m = /<([\w:]+)/.exec(html);
+  if (!m) return document.createTextNode(html);
+
+  html = html.replace(/^\s+|\s+$/g, ''); // Remove leading/trailing whitespace
+
+  var tag = m[1];
+
+  // body support
+  if (tag == 'body') {
+    var el = document.createElement('html');
+    el.innerHTML = html;
+    return el.removeChild(el.lastChild);
+  }
+
+  // wrap map
+  var wrap = map[tag] || map._default;
+  var depth = wrap[0];
+  var prefix = wrap[1];
+  var suffix = wrap[2];
+  var el = document.createElement('div');
+  el.innerHTML = prefix + html + suffix;
+  while (depth--) el = el.lastChild;
+
+  // one element
+  if (el.firstChild == el.lastChild) {
+    return el.removeChild(el.firstChild);
+  }
+
+  // several elements
+  var fragment = document.createDocumentFragment();
+  while (el.firstChild) {
+    fragment.appendChild(el.removeChild(el.firstChild));
+  }
+
+  return fragment;
+}
+
+});
+
+require.register("component~top@0.0.2", function (exports, module) {
+
+/**
+ * Module dependencies.
+ */
+
+var debounce = require("matthewmueller~debounce@0.0.1")
+  , html = require("component~top@0.0.2/template.js")
+  , domify = require("component~domify@1.0.0")
+  , event = require("component~event@0.1.0")
+
+/**
+ * Expose `top`.
+ */
+
+module.exports = top;
+
+/**
+ * Add back-to-top link.
+ *
+ * @api public
+ */
+
+function top() {
+  var el = domify(html);
+  var height = window.innerHeight;
+
+  function onscroll() {
+    var top = document.body.scrollTop;
+    if (top < height / 2) return hide();
+    show();
+  }
+
+  function show() {
+    el.className = 'show';
+  }
+
+  function hide() {
+    el.className = '';
+  }
+
+  event.bind(window, 'scroll', debounce(onscroll, 50));
+  document.body.appendChild(el);
+}
+
+});
+
+require.register("component~top@0.0.2/template.js", function (exports, module) {
+module.exports = '<a href="#" id="back-to-top"></a>\n';
 });
 
 require.register("component~indexof@0.0.1", function (exports, module) {
@@ -984,7 +958,6 @@ module.exports = function(arr, obj){
   }
   return -1;
 };
-
 });
 
 require.register("component~classes@1.1.1", function (exports, module) {
@@ -1152,304 +1125,6 @@ ClassList.prototype.contains = function(name){
     ? this.list.contains(name)
     : !! ~index(this.array(), name);
 };
-
-});
-
-require.register("yields~merge-attrs@0.0.1", function (exports, module) {
-
-/**
- * Export `merge`
- */
-
-module.exports = merge;
-
-/**
- * Merge `b`'s attrs into `a`.
- *
- * @param {Element} a
- * @param {Element} b
- * @api public
- */
-
-function merge(a, b){
-  for (var i = 0; i < b.attributes.length; ++i) {
-    var attr = b.attributes[i];
-    if (ignore(a, attr)) continue;
-    a.setAttribute(attr.name, attr.value);
-  }
-}
-
-/**
- * Check if `attr` should be ignored.
- *
- * @param {Element} a
- * @param {Attr} attr
- * @return {Boolean}
- * @api private
- */
-
-function ignore(a, attr){
-  return !attr.specified
-    || 'class' == attr.name
-    || 'id' == attr.name
-    || a.hasAttribute(attr.name);
-}
-
-});
-
-require.register("yields~uniq@master", function (exports, module) {
-
-/**
- * dependencies
- */
-
-try {
-  var indexOf = require("component~indexof@0.0.1");
-} catch(e){
-  var indexOf = require("indexof-component");
-}
-
-/**
- * Create duplicate free array
- * from the provided `arr`.
- *
- * @param {Array} arr
- * @param {Array} select
- * @return {Array}
- */
-
-module.exports = function (arr, select) {
-  var len = arr.length, ret = [], v;
-  select = select ? (select instanceof Array ? select : [select]) : false;
-
-  for (var i = 0; i < len; i++) {
-    v = arr[i];
-    if (select && !~indexOf(select, v)) {
-      ret.push(v);
-    } else if (!~indexOf(ret, v)) {
-      ret.push(v);
-    }
-  }
-  return ret;
-};
-
-});
-
-require.register("yields~carry@0.0.1", function (exports, module) {
-
-/**
- * dependencies
- */
-
-var merge = require("yields~merge-attrs@0.0.1")
-  , classes = require("component~classes@1.1.1")
-  , uniq = require("yields~uniq@master");
-
-/**
- * Export `carry`
- */
-
-module.exports = carry;
-
-/**
- * Carry over attrs and classes
- * from `b` to `a`.
- *
- * @param {Element} a
- * @param {Element} b
- * @return {Element}
- * @api public
- */
-
-function carry(a, b){
-  if (!a) return b.cloneNode();
-  carry.attrs(a, b);
-  carry.classes(a, b);
-  return a;
-}
-
-/**
- * Carry attributes.
- *
- * @param {Element} a
- * @param {Element} b
- * @return {Element} a
- * @api public
- */
-
-carry.attrs = function(a, b){
-  merge(a, b);
-  return a;
-};
-
-/**
- * Carry over classes.
- *
- * @param {Element} a
- * @param {Element} b
- * @return {Element} a
- * @api public
- */
-
-carry.classes = function(a, b){
-  if (a.className == b.className) return a;
-  var blist = classes(b).array();
-  var alist = classes(a).array();
-  var list = alist.concat(blist);
-  a.className = uniq(list).join(' ');
-  return a;
-};
-
-});
-
-require.register("visionmedia~debug@0.7.4", function (exports, module) {
-if ('undefined' == typeof window) {
-  module.exports = require("./lib/debug");
-} else {
-  module.exports = require("visionmedia~debug@0.7.4/debug.js");
-}
-
-
-});
-
-require.register("visionmedia~debug@0.7.4/debug.js", function (exports, module) {
-
-/**
- * Expose `debug()` as the module.
- */
-
-module.exports = debug;
-
-/**
- * Create a debugger with the given `name`.
- *
- * @param {String} name
- * @return {Type}
- * @api public
- */
-
-function debug(name) {
-  if (!debug.enabled(name)) return function(){};
-
-  return function(fmt){
-    fmt = coerce(fmt);
-
-    var curr = new Date;
-    var ms = curr - (debug[name] || curr);
-    debug[name] = curr;
-
-    fmt = name
-      + ' '
-      + fmt
-      + ' +' + debug.humanize(ms);
-
-    // This hackery is required for IE8
-    // where `console.log` doesn't have 'apply'
-    window.console
-      && console.log
-      && Function.prototype.apply.call(console.log, console, arguments);
-  }
-}
-
-/**
- * The currently active debug mode names.
- */
-
-debug.names = [];
-debug.skips = [];
-
-/**
- * Enables a debug mode by name. This can include modes
- * separated by a colon and wildcards.
- *
- * @param {String} name
- * @api public
- */
-
-debug.enable = function(name) {
-  try {
-    localStorage.debug = name;
-  } catch(e){}
-
-  var split = (name || '').split(/[\s,]+/)
-    , len = split.length;
-
-  for (var i = 0; i < len; i++) {
-    name = split[i].replace('*', '.*?');
-    if (name[0] === '-') {
-      debug.skips.push(new RegExp('^' + name.substr(1) + '$'));
-    }
-    else {
-      debug.names.push(new RegExp('^' + name + '$'));
-    }
-  }
-};
-
-/**
- * Disable debug output.
- *
- * @api public
- */
-
-debug.disable = function(){
-  debug.enable('');
-};
-
-/**
- * Humanize the given `ms`.
- *
- * @param {Number} m
- * @return {String}
- * @api private
- */
-
-debug.humanize = function(ms) {
-  var sec = 1000
-    , min = 60 * 1000
-    , hour = 60 * min;
-
-  if (ms >= hour) return (ms / hour).toFixed(1) + 'h';
-  if (ms >= min) return (ms / min).toFixed(1) + 'm';
-  if (ms >= sec) return (ms / sec | 0) + 's';
-  return ms + 'ms';
-};
-
-/**
- * Returns true if the given mode name is enabled, false otherwise.
- *
- * @param {String} name
- * @return {Boolean}
- * @api public
- */
-
-debug.enabled = function(name) {
-  for (var i = 0, len = debug.skips.length; i < len; i++) {
-    if (debug.skips[i].test(name)) {
-      return false;
-    }
-  }
-  for (var i = 0, len = debug.names.length; i < len; i++) {
-    if (debug.names[i].test(name)) {
-      return true;
-    }
-  }
-  return false;
-};
-
-/**
- * Coerce `val`.
- */
-
-function coerce(val) {
-  if (val instanceof Error) return val.stack || val.message;
-  return val;
-}
-
-// persist
-
-try {
-  if (window.localStorage) debug.enable(localStorage.debug);
-} catch(e){}
 
 });
 
@@ -1786,6 +1461,328 @@ Emitter.prototype.listeners = function(event){
 Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
+
+});
+
+require.register("component~query@0.0.1", function (exports, module) {
+
+function one(selector, el) {
+  return el.querySelector(selector);
+}
+
+exports = module.exports = function(selector, el){
+  el = el || document;
+  return one(selector, el);
+};
+
+exports.all = function(selector, el){
+  el = el || document;
+  return el.querySelectorAll(selector);
+};
+
+exports.engine = function(obj){
+  if (!obj.one) throw new Error('.one callback required');
+  if (!obj.all) throw new Error('.all callback required');
+  one = obj.one;
+  exports.all = obj.all;
+};
+
+});
+
+require.register("yields~merge-attrs@0.0.1", function (exports, module) {
+
+/**
+ * Export `merge`
+ */
+
+module.exports = merge;
+
+/**
+ * Merge `b`'s attrs into `a`.
+ *
+ * @param {Element} a
+ * @param {Element} b
+ * @api public
+ */
+
+function merge(a, b){
+  for (var i = 0; i < b.attributes.length; ++i) {
+    var attr = b.attributes[i];
+    if (ignore(a, attr)) continue;
+    a.setAttribute(attr.name, attr.value);
+  }
+}
+
+/**
+ * Check if `attr` should be ignored.
+ *
+ * @param {Element} a
+ * @param {Attr} attr
+ * @return {Boolean}
+ * @api private
+ */
+
+function ignore(a, attr){
+  return !attr.specified
+    || 'class' == attr.name
+    || 'id' == attr.name
+    || a.hasAttribute(attr.name);
+}
+
+});
+
+require.register("yields~uniq@master", function (exports, module) {
+
+/**
+ * dependencies
+ */
+
+try {
+  var indexOf = require("component~indexof@0.0.1");
+} catch(e){
+  var indexOf = require("indexof-component");
+}
+
+/**
+ * Create duplicate free array
+ * from the provided `arr`.
+ *
+ * @param {Array} arr
+ * @param {Array} select
+ * @return {Array}
+ */
+
+module.exports = function (arr, select) {
+  var len = arr.length, ret = [], v;
+  select = select ? (select instanceof Array ? select : [select]) : false;
+
+  for (var i = 0; i < len; i++) {
+    v = arr[i];
+    if (select && !~indexOf(select, v)) {
+      ret.push(v);
+    } else if (!~indexOf(ret, v)) {
+      ret.push(v);
+    }
+  }
+  return ret;
+};
+
+});
+
+require.register("yields~carry@0.0.1", function (exports, module) {
+
+/**
+ * dependencies
+ */
+
+var merge = require("yields~merge-attrs@0.0.1")
+  , classes = require("component~classes@1.1.1")
+  , uniq = require("yields~uniq@master");
+
+/**
+ * Export `carry`
+ */
+
+module.exports = carry;
+
+/**
+ * Carry over attrs and classes
+ * from `b` to `a`.
+ *
+ * @param {Element} a
+ * @param {Element} b
+ * @return {Element}
+ * @api public
+ */
+
+function carry(a, b){
+  if (!a) return b.cloneNode();
+  carry.attrs(a, b);
+  carry.classes(a, b);
+  return a;
+}
+
+/**
+ * Carry attributes.
+ *
+ * @param {Element} a
+ * @param {Element} b
+ * @return {Element} a
+ * @api public
+ */
+
+carry.attrs = function(a, b){
+  merge(a, b);
+  return a;
+};
+
+/**
+ * Carry over classes.
+ *
+ * @param {Element} a
+ * @param {Element} b
+ * @return {Element} a
+ * @api public
+ */
+
+carry.classes = function(a, b){
+  if (a.className == b.className) return a;
+  var blist = classes(b).array();
+  var alist = classes(a).array();
+  var list = alist.concat(blist);
+  a.className = uniq(list).join(' ');
+  return a;
+};
+
+});
+
+require.register("visionmedia~debug@0.7.4", function (exports, module) {
+if ('undefined' == typeof window) {
+  module.exports = require("./lib/debug");
+} else {
+  module.exports = require("visionmedia~debug@0.7.4/debug.js");
+}
+
+});
+
+require.register("visionmedia~debug@0.7.4/debug.js", function (exports, module) {
+
+/**
+ * Expose `debug()` as the module.
+ */
+
+module.exports = debug;
+
+/**
+ * Create a debugger with the given `name`.
+ *
+ * @param {String} name
+ * @return {Type}
+ * @api public
+ */
+
+function debug(name) {
+  if (!debug.enabled(name)) return function(){};
+
+  return function(fmt){
+    fmt = coerce(fmt);
+
+    var curr = new Date;
+    var ms = curr - (debug[name] || curr);
+    debug[name] = curr;
+
+    fmt = name
+      + ' '
+      + fmt
+      + ' +' + debug.humanize(ms);
+
+    // This hackery is required for IE8
+    // where `console.log` doesn't have 'apply'
+    window.console
+      && console.log
+      && Function.prototype.apply.call(console.log, console, arguments);
+  }
+}
+
+/**
+ * The currently active debug mode names.
+ */
+
+debug.names = [];
+debug.skips = [];
+
+/**
+ * Enables a debug mode by name. This can include modes
+ * separated by a colon and wildcards.
+ *
+ * @param {String} name
+ * @api public
+ */
+
+debug.enable = function(name) {
+  try {
+    localStorage.debug = name;
+  } catch(e){}
+
+  var split = (name || '').split(/[\s,]+/)
+    , len = split.length;
+
+  for (var i = 0; i < len; i++) {
+    name = split[i].replace('*', '.*?');
+    if (name[0] === '-') {
+      debug.skips.push(new RegExp('^' + name.substr(1) + '$'));
+    }
+    else {
+      debug.names.push(new RegExp('^' + name + '$'));
+    }
+  }
+};
+
+/**
+ * Disable debug output.
+ *
+ * @api public
+ */
+
+debug.disable = function(){
+  debug.enable('');
+};
+
+/**
+ * Humanize the given `ms`.
+ *
+ * @param {Number} m
+ * @return {String}
+ * @api private
+ */
+
+debug.humanize = function(ms) {
+  var sec = 1000
+    , min = 60 * 1000
+    , hour = 60 * min;
+
+  if (ms >= hour) return (ms / hour).toFixed(1) + 'h';
+  if (ms >= min) return (ms / min).toFixed(1) + 'm';
+  if (ms >= sec) return (ms / sec | 0) + 's';
+  return ms + 'ms';
+};
+
+/**
+ * Returns true if the given mode name is enabled, false otherwise.
+ *
+ * @param {String} name
+ * @return {Boolean}
+ * @api public
+ */
+
+debug.enabled = function(name) {
+  for (var i = 0, len = debug.skips.length; i < len; i++) {
+    if (debug.skips[i].test(name)) {
+      return false;
+    }
+  }
+  for (var i = 0, len = debug.names.length; i < len; i++) {
+    if (debug.names[i].test(name)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+/**
+ * Coerce `val`.
+ */
+
+function coerce(val) {
+  if (val instanceof Error) return val.stack || val.message;
+  return val;
+}
+
+// persist
+
+try {
+  if (window.localStorage) debug.enable(localStorage.debug);
+} catch(e){}
 
 });
 
@@ -2987,7 +2984,6 @@ module.exports = function walk(el, process, done) {
 
   process(el, next);
 }
-
 
 });
 
@@ -4237,7 +4233,6 @@ exports.cancel = function(id){
   cancel.call(window, id);
 };
 
-
 });
 
 require.register("component~spinner@1.0.0", function (exports, module) {
@@ -4436,6 +4431,39 @@ Spinner.prototype.draw = function(ctx){
 
 });
 
+require.register("./lib/error", function (exports, module) {
+
+/**
+ * Module dependencies.
+ */
+
+var tmpl = require("./lib/error/template.html");
+var reactive = require("component~reactive@1.1.0");
+var domify = require("component~domify@1.2.2");
+
+/**
+ * Expose `ErrorView`.
+ */
+
+module.exports = ErrorView;
+
+/**
+ * Initialize a new error view.
+ *
+ * @param {Object} error
+ * @api public
+ */
+
+function ErrorView(error) {
+  this.error = error;
+  this.el = domify(tmpl);
+  this.view = reactive(this.el, error, this);
+}
+
+});
+
+require.define("./lib/error/template.html", "<div class='error'>\n  <h2 data-text='title'></h2>\n  <p data-text='msg'></p>\n</div>\n");
+
 require.register("./lib/list", function (exports, module) {
 
 /**
@@ -4544,39 +4572,6 @@ ComponentView.prototype.stars = function () {
 });
 
 require.define("./lib/list/template.html", "<div class='component'>\n  <header class='header'>\n    <h3><a data-href='url' data-text='name'></a></h3>\n    <a class='repo' data-text='repository' data-href='url'></a>\n  </header>\n  <table class='info'>\n    <tr>\n      <td>Stars</td>\n      <td data-text='stars'></td>\n    </tr>\n    <tr>\n      <td>License</td>\n      <td data-text='license'></td>\n    </tr>\n  </table>\n  <p data-text='description'></p>\n</div>\n");
-
-require.register("./lib/error", function (exports, module) {
-
-/**
- * Module dependencies.
- */
-
-var tmpl = require("./lib/error/template.html");
-var reactive = require("component~reactive@1.1.0");
-var domify = require("component~domify@1.2.2");
-
-/**
- * Expose `ErrorView`.
- */
-
-module.exports = ErrorView;
-
-/**
- * Initialize a new error view.
- *
- * @param {Object} error
- * @api public
- */
-
-function ErrorView(error) {
-  this.error = error;
-  this.el = domify(tmpl);
-  this.view = reactive(this.el, error, this);
-}
-
-});
-
-require.define("./lib/error/template.html", "<div class='error'>\n  <h2 data-text='title'></h2>\n  <p data-text='msg'></p>\n</div>\n");
 
 require.register("./lib/search", function (exports, module) {
 
