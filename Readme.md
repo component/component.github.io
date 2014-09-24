@@ -1,6 +1,6 @@
 # component.io
 
-  The [component.io](http://component.io) website powered by [Component](https://github.com/component/component).
+  The [component.github.io](http://component.github.io) website powered by [Component](https://github.com/componentjs/component).
 
   ![web components site screenshot](http://f.cl.ly/items/410J2r0Y1Q0m3q01182y/site.png)
 
