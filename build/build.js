@@ -10,13 +10,96 @@ function require(name) {
   var module = require.modules[name];
   if (!module) throw new Error('failed to require "' + name + '"');
 
-  if (module.definition) {
+  if (!('exports' in module) && typeof module.definition === 'function') {
     module.client = module.component = true;
     module.definition.call(this, module.exports = {}, module);
     delete module.definition;
   }
 
   return module.exports;
+}
+
+/**
+ * Meta info, accessible in the global scope unless you use AMD option.
+ */
+
+require.loader = 'component';
+
+/**
+ * Internal helper object, contains a sorting function for semantiv versioning
+ */
+require.helper = {};
+require.helper.semVerSort = function(a, b) {
+  var aArray = a.version.split('.');
+  var bArray = b.version.split('.');
+  for (var i=0; i<aArray.length; ++i) {
+    var aInt = parseInt(aArray[i], 10);
+    var bInt = parseInt(bArray[i], 10);
+    if (aInt === bInt) {
+      var aLex = aArray[i].substr((""+aInt).length);
+      var bLex = bArray[i].substr((""+bInt).length);
+      if (aLex === '' && bLex !== '') return 1;
+      if (aLex !== '' && bLex === '') return -1;
+      if (aLex !== '' && bLex !== '') return aLex > bLex ? 1 : -1;
+      continue;
+    } else if (aInt > bInt) {
+      return 1;
+    } else {
+      return -1;
+    }
+  }
+  return 0;
+}
+
+/**
+ * Find and require a module which name starts with the provided name.
+ * If multiple modules exists, the highest semver is used. 
+ * This function can only be used for remote dependencies.
+
+ * @param {String} name - module name: `user~repo`
+ * @param {Boolean} returnPath - returns the canonical require path if true, 
+ *                               otherwise it returns the epxorted module
+ */
+require.latest = function (name, returnPath) {
+  function showError(name) {
+    throw new Error('failed to find latest module of "' + name + '"');
+  }
+  // only remotes with semvers, ignore local files conataining a '/'
+  var versionRegexp = /(.*)~(.*)@v?(\d+\.\d+\.\d+[^\/]*)$/;
+  var remoteRegexp = /(.*)~(.*)/;
+  if (!remoteRegexp.test(name)) showError(name);
+  var moduleNames = Object.keys(require.modules);
+  var semVerCandidates = [];
+  var otherCandidates = []; // for instance: name of the git branch
+  for (var i=0; i<moduleNames.length; i++) {
+    var moduleName = moduleNames[i];
+    if (new RegExp(name + '@').test(moduleName)) {
+        var version = moduleName.substr(name.length+1);
+        var semVerMatch = versionRegexp.exec(moduleName);
+        if (semVerMatch != null) {
+          semVerCandidates.push({version: version, name: moduleName});
+        } else {
+          otherCandidates.push({version: version, name: moduleName});
+        } 
+    }
+  }
+  if (semVerCandidates.concat(otherCandidates).length === 0) {
+    showError(name);
+  }
+  if (semVerCandidates.length > 0) {
+    var module = semVerCandidates.sort(require.helper.semVerSort).pop().name;
+    if (returnPath === true) {
+      return module;
+    }
+    return require(module);
+  }
+  // if the build contains more than one branch of the same module
+  // you should not use this funciton
+  var module = otherCandidates.pop().name;
+  if (returnPath === true) {
+    return module;
+  }
+  return require(module);
 }
 
 /**
@@ -52,8 +135,7 @@ require.define = function (name, exports) {
     exports: exports
   };
 };
-
-require.register("yields~keycode@1.0.0", function (exports, module) {
+require.register("yields~keycode@1.1.0", function (exports, module) {
 
 /**
  * map
@@ -61,6 +143,7 @@ require.register("yields~keycode@1.0.0", function (exports, module) {
 
 var map = {
     backspace: 8
+  , command: 91
   , tab: 9
   , clear: 12
   , enter: 13
@@ -77,6 +160,18 @@ var map = {
   , down: 40
   , del: 46
   , comma: 188
+  , f1: 112
+  , f2: 113
+  , f3: 114
+  , f4: 115
+  , f5: 116
+  , f6: 117
+  , f7: 118
+  , f8: 119
+  , f9: 120
+  , f10: 121
+  , f11: 122
+  , f12: 123
   , ',': 188
   , '.': 190
   , '/': 191
@@ -98,7 +193,7 @@ var map = {
  */
 
 module.exports = function(name){
-  return map[name] || name.toUpperCase().charCodeAt(0);
+  return map[name.toLowerCase()] || name.toUpperCase().charCodeAt(0);
 };
 
 });
@@ -109,7 +204,7 @@ require.register("yields~k-sequence@0.1.0", function (exports, module) {
  * dependencies
  */
 
-var keycode = require("yields~keycode@1.0.0");
+var keycode = require('yields~keycode@1.1.0');
 
 /**
  * Export `sequence`
@@ -210,8 +305,7 @@ exports.unbind = function(el, type, fn, capture){
 
 });
 
-require.register("component~bind@0.0.1", function (exports, module) {
-
+require.register("component~bind@1.0.0", function (exports, module) {
 /**
  * Slice reference.
  */
@@ -230,7 +324,7 @@ var slice = [].slice;
 module.exports = function(obj, fn){
   if ('string' == typeof fn) fn = obj[fn];
   if ('function' != typeof fn) throw new Error('bind() requires a function');
-  var args = [].slice.call(arguments, 2);
+  var args = slice.call(arguments, 2);
   return function(){
     return fn.apply(obj, args.concat(slice.call(arguments)));
   }
@@ -258,16 +352,16 @@ require.register("yields~k@0.6.1", function (exports, module) {
  * dependencies.
  */
 
-var event = require("component~event@0.1.0")
-  , proto = require("yields~k@0.6.1/lib/proto.js")
-  , bind = require("component~bind@0.0.1");
+var event = require('component~event@0.1.0')
+  , proto = require('yields~k@0.6.1/lib/proto.js')
+  , bind = require('component~bind@1.0.0');
 
 /**
  * Create a new dispatcher with `el`.
  *
  * example:
  *
- *      var k = require("k")(window);
+ *      var k = require('k')(window);
  *      k('shift + tab', function(){});
  *
  * @param {Element} el
@@ -297,10 +391,10 @@ require.register("yields~k@0.6.1/lib/proto.js", function (exports, module) {
  * dependencies
  */
 
-var sequence = require("yields~k-sequence@0.1.0")
-  , keycode = require("yields~keycode@1.0.0")
-  , event = require("component~event@0.1.0")
-  , os = require("component~os@0.0.1");
+var sequence = require('yields~k-sequence@0.1.0')
+  , keycode = require('yields~keycode@1.1.0')
+  , event = require('component~event@0.1.0')
+  , os = require('component~os@0.0.1');
 
 /**
  * modifiers.
@@ -892,10 +986,10 @@ require.register("component~top@0.0.2", function (exports, module) {
  * Module dependencies.
  */
 
-var debounce = require("matthewmueller~debounce@0.0.1")
-  , html = require("component~top@0.0.2/template.js")
-  , domify = require("component~domify@1.0.0")
-  , event = require("component~event@0.1.0")
+var debounce = require('matthewmueller~debounce@0.0.1')
+  , html = require('component~top@0.0.2/template.js')
+  , domify = require('component~domify@1.0.0')
+  , event = require('component~event@0.1.0')
 
 /**
  * Expose `top`.
@@ -937,193 +1031,136 @@ require.register("component~top@0.0.2/template.js", function (exports, module) {
 module.exports = '<a href="#" id="back-to-top"></a>\n';
 });
 
-require.register("component~indexof@0.0.1", function (exports, module) {
+require.register("component~trim@0.0.1", function (exports, module) {
 
-var indexOf = [].indexOf;
+exports = module.exports = trim;
 
-module.exports = function(arr, obj){
-  if (indexOf) return arr.indexOf(obj);
-  for (var i = 0; i < arr.length; ++i) {
-    if (arr[i] === obj) return i;
-  }
-  return -1;
+function trim(str){
+  if (str.trim) return str.trim();
+  return str.replace(/^\s*|\s*$/g, '');
+}
+
+exports.left = function(str){
+  if (str.trimLeft) return str.trimLeft();
+  return str.replace(/^\s*/, '');
 };
+
+exports.right = function(str){
+  if (str.trimRight) return str.trimRight();
+  return str.replace(/\s*$/, '');
+};
+
 });
 
-require.register("component~indexof@0.0.3", function (exports, module) {
-module.exports = function(arr, obj){
-  if (arr.indexOf) return arr.indexOf(obj);
-  for (var i = 0; i < arr.length; ++i) {
-    if (arr[i] === obj) return i;
-  }
-  return -1;
-};
-});
-
-require.register("component~classes@1.1.1", function (exports, module) {
+require.register("component~type@1.0.0", function (exports, module) {
 
 /**
- * Module dependencies.
- */
-
-var index = require("component~indexof@0.0.3");
-
-/**
- * Whitespace regexp.
- */
-
-var re = /\s+/;
-
-/**
- * toString reference.
+ * toString ref.
  */
 
 var toString = Object.prototype.toString;
 
 /**
- * Wrap `el` in a `ClassList`.
+ * Return the type of `val`.
  *
- * @param {Element} el
- * @return {ClassList}
+ * @param {Mixed} val
+ * @return {String}
  * @api public
  */
 
-module.exports = function(el){
-  return new ClassList(el);
+module.exports = function(val){
+  switch (toString.call(val)) {
+    case '[object Function]': return 'function';
+    case '[object Date]': return 'date';
+    case '[object RegExp]': return 'regexp';
+    case '[object Arguments]': return 'arguments';
+    case '[object Array]': return 'array';
+    case '[object String]': return 'string';
+  }
+
+  if (val === null) return 'null';
+  if (val === undefined) return 'undefined';
+  if (val && val.nodeType === 1) return 'element';
+  if (val === Object(val)) return 'object';
+
+  return typeof val;
 };
 
+});
+
+require.register("component~querystring@1.3.1", function (exports, module) {
+
 /**
- * Initialize a new ClassList for `el`.
- *
- * @param {Element} el
- * @api private
+ * Module dependencies.
  */
 
-function ClassList(el) {
-  this.el = el;
-  this.list = el.classList;
-}
+var encode = encodeURIComponent;
+var decode = decodeURIComponent;
+var trim = require('component~trim@0.0.1');
+var type = require('component~type@1.0.0');
 
 /**
- * Add class `name` if not already present.
+ * Parse the given query `str`.
  *
- * @param {String} name
- * @return {ClassList}
+ * @param {String} str
+ * @return {Object}
  * @api public
  */
 
-ClassList.prototype.add = function(name){
-  // classList
-  if (this.list) {
-    this.list.add(name);
-    return this;
-  }
+exports.parse = function(str){
+  if ('string' != typeof str) return {};
 
-  // fallback
-  var arr = this.array();
-  var i = index(arr, name);
-  if (!~i) arr.push(name);
-  this.el.className = arr.join(' ');
-  return this;
-};
+  str = trim(str);
+  if ('' == str) return {};
+  if ('?' == str.charAt(0)) str = str.slice(1);
 
-/**
- * Remove class `name` when present, or
- * pass a regular expression to remove
- * any which match.
- *
- * @param {String|RegExp} name
- * @return {ClassList}
- * @api public
- */
+  var obj = {};
+  var pairs = str.split('&');
+  for (var i = 0; i < pairs.length; i++) {
+    var parts = pairs[i].split('=');
+    var key = decode(parts[0]);
+    var m;
 
-ClassList.prototype.remove = function(name){
-  if ('[object RegExp]' == toString.call(name)) {
-    return this.removeMatching(name);
-  }
-
-  // classList
-  if (this.list) {
-    this.list.remove(name);
-    return this;
-  }
-
-  // fallback
-  var arr = this.array();
-  var i = index(arr, name);
-  if (~i) arr.splice(i, 1);
-  this.el.className = arr.join(' ');
-  return this;
-};
-
-/**
- * Remove all classes matching `re`.
- *
- * @param {RegExp} re
- * @return {ClassList}
- * @api private
- */
-
-ClassList.prototype.removeMatching = function(re){
-  var arr = this.array();
-  for (var i = 0; i < arr.length; i++) {
-    if (re.test(arr[i])) {
-      this.remove(arr[i]);
+    if (m = /(\w+)\[(\d+)\]/.exec(key)) {
+      obj[m[1]] = obj[m[1]] || [];
+      obj[m[1]][m[2]] = decode(parts[1]);
+      continue;
     }
+
+    obj[parts[0]] = null == parts[1]
+      ? ''
+      : decode(parts[1]);
   }
-  return this;
+
+  return obj;
 };
 
 /**
- * Toggle class `name`.
+ * Stringify the given `obj`.
  *
- * @param {String} name
- * @return {ClassList}
+ * @param {Object} obj
+ * @return {String}
  * @api public
  */
 
-ClassList.prototype.toggle = function(name){
-  // classList
-  if (this.list) {
-    this.list.toggle(name);
-    return this;
+exports.stringify = function(obj){
+  if (!obj) return '';
+  var pairs = [];
+
+  for (var key in obj) {
+    var value = obj[key];
+
+    if ('array' == type(value)) {
+      for (var i = 0; i < value.length; ++i) {
+        pairs.push(encode(key + '[' + i + ']') + '=' + encode(value[i]));
+      }
+      continue;
+    }
+
+    pairs.push(encode(key) + '=' + encode(obj[key]));
   }
 
-  // fallback
-  if (this.has(name)) {
-    this.remove(name);
-  } else {
-    this.add(name);
-  }
-  return this;
-};
-
-/**
- * Return an array of classes.
- *
- * @return {Array}
- * @api public
- */
-
-ClassList.prototype.array = function(){
-  var arr = this.el.className.split(re);
-  if ('' === arr[0]) arr.pop();
-  return arr;
-};
-
-/**
- * Check if class `name` is present.
- *
- * @param {String} name
- * @return {ClassList}
- * @api public
- */
-
-ClassList.prototype.has =
-ClassList.prototype.contains = function(name){
-  return this.list
-    ? this.list.contains(name)
-    : !! ~index(this.array(), name);
+  return pairs.join('&');
 };
 
 });
@@ -1464,6 +1501,1456 @@ Emitter.prototype.hasListeners = function(event){
 
 });
 
+require.register("component~reduce@1.0.1", function (exports, module) {
+
+/**
+ * Reduce `arr` with `fn`.
+ *
+ * @param {Array} arr
+ * @param {Function} fn
+ * @param {Mixed} initial
+ *
+ * TODO: combatible error handling?
+ */
+
+module.exports = function(arr, fn, initial){  
+  var idx = 0;
+  var len = arr.length;
+  var curr = arguments.length == 3
+    ? initial
+    : arr[idx++];
+
+  while (idx < len) {
+    curr = fn.call(null, curr, arr[idx], ++idx, arr);
+  }
+  
+  return curr;
+};
+});
+
+require.register("visionmedia~superagent@0.21.0", function (exports, module) {
+/**
+ * Module dependencies.
+ */
+
+var Emitter = require('component~emitter@1.1.2');
+var reduce = require('component~reduce@1.0.1');
+
+/**
+ * Root reference for iframes.
+ */
+
+var root = 'undefined' == typeof window
+  ? this
+  : window;
+
+/**
+ * Noop.
+ */
+
+function noop(){};
+
+/**
+ * Check if `obj` is a host object,
+ * we don't want to serialize these :)
+ *
+ * TODO: future proof, move to compoent land
+ *
+ * @param {Object} obj
+ * @return {Boolean}
+ * @api private
+ */
+
+function isHost(obj) {
+  var str = {}.toString.call(obj);
+
+  switch (str) {
+    case '[object File]':
+    case '[object Blob]':
+    case '[object FormData]':
+      return true;
+    default:
+      return false;
+  }
+}
+
+/**
+ * Determine XHR.
+ */
+
+function getXHR() {
+  if (root.XMLHttpRequest
+    && ('file:' != root.location.protocol || !root.ActiveXObject)) {
+    return new XMLHttpRequest;
+  } else {
+    try { return new ActiveXObject('Microsoft.XMLHTTP'); } catch(e) {}
+    try { return new ActiveXObject('Msxml2.XMLHTTP.6.0'); } catch(e) {}
+    try { return new ActiveXObject('Msxml2.XMLHTTP.3.0'); } catch(e) {}
+    try { return new ActiveXObject('Msxml2.XMLHTTP'); } catch(e) {}
+  }
+  return false;
+}
+
+/**
+ * Removes leading and trailing whitespace, added to support IE.
+ *
+ * @param {String} s
+ * @return {String}
+ * @api private
+ */
+
+var trim = ''.trim
+  ? function(s) { return s.trim(); }
+  : function(s) { return s.replace(/(^\s*|\s*$)/g, ''); };
+
+/**
+ * Check if `obj` is an object.
+ *
+ * @param {Object} obj
+ * @return {Boolean}
+ * @api private
+ */
+
+function isObject(obj) {
+  return obj === Object(obj);
+}
+
+/**
+ * Serialize the given `obj`.
+ *
+ * @param {Object} obj
+ * @return {String}
+ * @api private
+ */
+
+function serialize(obj) {
+  if (!isObject(obj)) return obj;
+  var pairs = [];
+  for (var key in obj) {
+    if (null != obj[key]) {
+      pairs.push(encodeURIComponent(key)
+        + '=' + encodeURIComponent(obj[key]));
+    }
+  }
+  return pairs.join('&');
+}
+
+/**
+ * Expose serialization method.
+ */
+
+ request.serializeObject = serialize;
+
+ /**
+  * Parse the given x-www-form-urlencoded `str`.
+  *
+  * @param {String} str
+  * @return {Object}
+  * @api private
+  */
+
+function parseString(str) {
+  var obj = {};
+  var pairs = str.split('&');
+  var parts;
+  var pair;
+
+  for (var i = 0, len = pairs.length; i < len; ++i) {
+    pair = pairs[i];
+    parts = pair.split('=');
+    obj[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
+  }
+
+  return obj;
+}
+
+/**
+ * Expose parser.
+ */
+
+request.parseString = parseString;
+
+/**
+ * Default MIME type map.
+ *
+ *     superagent.types.xml = 'application/xml';
+ *
+ */
+
+request.types = {
+  html: 'text/html',
+  json: 'application/json',
+  xml: 'application/xml',
+  urlencoded: 'application/x-www-form-urlencoded',
+  'form': 'application/x-www-form-urlencoded',
+  'form-data': 'application/x-www-form-urlencoded'
+};
+
+/**
+ * Default serialization map.
+ *
+ *     superagent.serialize['application/xml'] = function(obj){
+ *       return 'generated xml here';
+ *     };
+ *
+ */
+
+ request.serialize = {
+   'application/x-www-form-urlencoded': serialize,
+   'application/json': JSON.stringify
+ };
+
+ /**
+  * Default parsers.
+  *
+  *     superagent.parse['application/xml'] = function(str){
+  *       return { object parsed from str };
+  *     };
+  *
+  */
+
+request.parse = {
+  'application/x-www-form-urlencoded': parseString,
+  'application/json': JSON.parse
+};
+
+/**
+ * Parse the given header `str` into
+ * an object containing the mapped fields.
+ *
+ * @param {String} str
+ * @return {Object}
+ * @api private
+ */
+
+function parseHeader(str) {
+  var lines = str.split(/\r?\n/);
+  var fields = {};
+  var index;
+  var line;
+  var field;
+  var val;
+
+  lines.pop(); // trailing CRLF
+
+  for (var i = 0, len = lines.length; i < len; ++i) {
+    line = lines[i];
+    index = line.indexOf(':');
+    field = line.slice(0, index).toLowerCase();
+    val = trim(line.slice(index + 1));
+    fields[field] = val;
+  }
+
+  return fields;
+}
+
+/**
+ * Return the mime type for the given `str`.
+ *
+ * @param {String} str
+ * @return {String}
+ * @api private
+ */
+
+function type(str){
+  return str.split(/ *; */).shift();
+};
+
+/**
+ * Return header field parameters.
+ *
+ * @param {String} str
+ * @return {Object}
+ * @api private
+ */
+
+function params(str){
+  return reduce(str.split(/ *; */), function(obj, str){
+    var parts = str.split(/ *= */)
+      , key = parts.shift()
+      , val = parts.shift();
+
+    if (key && val) obj[key] = val;
+    return obj;
+  }, {});
+};
+
+/**
+ * Initialize a new `Response` with the given `xhr`.
+ *
+ *  - set flags (.ok, .error, etc)
+ *  - parse header
+ *
+ * Examples:
+ *
+ *  Aliasing `superagent` as `request` is nice:
+ *
+ *      request = superagent;
+ *
+ *  We can use the promise-like API, or pass callbacks:
+ *
+ *      request.get('/').end(function(res){});
+ *      request.get('/', function(res){});
+ *
+ *  Sending data can be chained:
+ *
+ *      request
+ *        .post('/user')
+ *        .send({ name: 'tj' })
+ *        .end(function(res){});
+ *
+ *  Or passed to `.send()`:
+ *
+ *      request
+ *        .post('/user')
+ *        .send({ name: 'tj' }, function(res){});
+ *
+ *  Or passed to `.post()`:
+ *
+ *      request
+ *        .post('/user', { name: 'tj' })
+ *        .end(function(res){});
+ *
+ * Or further reduced to a single call for simple cases:
+ *
+ *      request
+ *        .post('/user', { name: 'tj' }, function(res){});
+ *
+ * @param {XMLHTTPRequest} xhr
+ * @param {Object} options
+ * @api private
+ */
+
+function Response(req, options) {
+  options = options || {};
+  this.req = req;
+  this.xhr = this.req.xhr;
+  this.text = this.req.method !='HEAD' 
+     ? this.xhr.responseText 
+     : null;
+  this.setStatusProperties(this.xhr.status);
+  this.header = this.headers = parseHeader(this.xhr.getAllResponseHeaders());
+  // getAllResponseHeaders sometimes falsely returns "" for CORS requests, but
+  // getResponseHeader still works. so we get content-type even if getting
+  // other headers fails.
+  this.header['content-type'] = this.xhr.getResponseHeader('content-type');
+  this.setHeaderProperties(this.header);
+  this.body = this.req.method != 'HEAD'
+    ? this.parseBody(this.text)
+    : null;
+}
+
+/**
+ * Get case-insensitive `field` value.
+ *
+ * @param {String} field
+ * @return {String}
+ * @api public
+ */
+
+Response.prototype.get = function(field){
+  return this.header[field.toLowerCase()];
+};
+
+/**
+ * Set header related properties:
+ *
+ *   - `.type` the content type without params
+ *
+ * A response of "Content-Type: text/plain; charset=utf-8"
+ * will provide you with a `.type` of "text/plain".
+ *
+ * @param {Object} header
+ * @api private
+ */
+
+Response.prototype.setHeaderProperties = function(header){
+  // content-type
+  var ct = this.header['content-type'] || '';
+  this.type = type(ct);
+
+  // params
+  var obj = params(ct);
+  for (var key in obj) this[key] = obj[key];
+};
+
+/**
+ * Parse the given body `str`.
+ *
+ * Used for auto-parsing of bodies. Parsers
+ * are defined on the `superagent.parse` object.
+ *
+ * @param {String} str
+ * @return {Mixed}
+ * @api private
+ */
+
+Response.prototype.parseBody = function(str){
+  var parse = request.parse[this.type];
+  return parse && str && str.length
+    ? parse(str)
+    : null;
+};
+
+/**
+ * Set flags such as `.ok` based on `status`.
+ *
+ * For example a 2xx response will give you a `.ok` of __true__
+ * whereas 5xx will be __false__ and `.error` will be __true__. The
+ * `.clientError` and `.serverError` are also available to be more
+ * specific, and `.statusType` is the class of error ranging from 1..5
+ * sometimes useful for mapping respond colors etc.
+ *
+ * "sugar" properties are also defined for common cases. Currently providing:
+ *
+ *   - .noContent
+ *   - .badRequest
+ *   - .unauthorized
+ *   - .notAcceptable
+ *   - .notFound
+ *
+ * @param {Number} status
+ * @api private
+ */
+
+Response.prototype.setStatusProperties = function(status){
+  var type = status / 100 | 0;
+
+  // status / class
+  this.status = status;
+  this.statusType = type;
+
+  // basics
+  this.info = 1 == type;
+  this.ok = 2 == type;
+  this.clientError = 4 == type;
+  this.serverError = 5 == type;
+  this.error = (4 == type || 5 == type)
+    ? this.toError()
+    : false;
+
+  // sugar
+  this.accepted = 202 == status;
+  this.noContent = 204 == status || 1223 == status;
+  this.badRequest = 400 == status;
+  this.unauthorized = 401 == status;
+  this.notAcceptable = 406 == status;
+  this.notFound = 404 == status;
+  this.forbidden = 403 == status;
+};
+
+/**
+ * Return an `Error` representative of this response.
+ *
+ * @return {Error}
+ * @api public
+ */
+
+Response.prototype.toError = function(){
+  var req = this.req;
+  var method = req.method;
+  var url = req.url;
+
+  var msg = 'cannot ' + method + ' ' + url + ' (' + this.status + ')';
+  var err = new Error(msg);
+  err.status = this.status;
+  err.method = method;
+  err.url = url;
+
+  return err;
+};
+
+/**
+ * Expose `Response`.
+ */
+
+request.Response = Response;
+
+/**
+ * Initialize a new `Request` with the given `method` and `url`.
+ *
+ * @param {String} method
+ * @param {String} url
+ * @api public
+ */
+
+function Request(method, url) {
+  var self = this;
+  Emitter.call(this);
+  this._query = this._query || [];
+  this.method = method;
+  this.url = url;
+  this.header = {};
+  this._header = {};
+  this.on('end', function(){
+    var err = null;
+    var res = null;
+
+    try {
+      res = new Response(self); 
+    } catch(e) {
+      err = new Error('Parser is unable to parse the response');
+      err.parse = true;
+      err.original = e;
+    }
+
+    self.callback(err, res);
+  });
+}
+
+/**
+ * Mixin `Emitter`.
+ */
+
+Emitter(Request.prototype);
+
+/**
+ * Allow for extension
+ */
+
+Request.prototype.use = function(fn) {
+  fn(this);
+  return this;
+}
+
+/**
+ * Set timeout to `ms`.
+ *
+ * @param {Number} ms
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.timeout = function(ms){
+  this._timeout = ms;
+  return this;
+};
+
+/**
+ * Clear previous timeout.
+ *
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.clearTimeout = function(){
+  this._timeout = 0;
+  clearTimeout(this._timer);
+  return this;
+};
+
+/**
+ * Abort the request, and clear potential timeout.
+ *
+ * @return {Request}
+ * @api public
+ */
+
+Request.prototype.abort = function(){
+  if (this.aborted) return;
+  this.aborted = true;
+  this.xhr.abort();
+  this.clearTimeout();
+  this.emit('abort');
+  return this;
+};
+
+/**
+ * Set header `field` to `val`, or multiple fields with one object.
+ *
+ * Examples:
+ *
+ *      req.get('/')
+ *        .set('Accept', 'application/json')
+ *        .set('X-API-Key', 'foobar')
+ *        .end(callback);
+ *
+ *      req.get('/')
+ *        .set({ Accept: 'application/json', 'X-API-Key': 'foobar' })
+ *        .end(callback);
+ *
+ * @param {String|Object} field
+ * @param {String} val
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.set = function(field, val){
+  if (isObject(field)) {
+    for (var key in field) {
+      this.set(key, field[key]);
+    }
+    return this;
+  }
+  this._header[field.toLowerCase()] = val;
+  this.header[field] = val;
+  return this;
+};
+
+/**
+ * Remove header `field`.
+ *
+ * Example:
+ *
+ *      req.get('/')
+ *        .unset('User-Agent')
+ *        .end(callback);
+ *
+ * @param {String} field
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.unset = function(field){
+  delete this._header[field.toLowerCase()];
+  delete this.header[field];
+  return this;
+};
+
+/**
+ * Get case-insensitive header `field` value.
+ *
+ * @param {String} field
+ * @return {String}
+ * @api private
+ */
+
+Request.prototype.getHeader = function(field){
+  return this._header[field.toLowerCase()];
+};
+
+/**
+ * Set Content-Type to `type`, mapping values from `request.types`.
+ *
+ * Examples:
+ *
+ *      superagent.types.xml = 'application/xml';
+ *
+ *      request.post('/')
+ *        .type('xml')
+ *        .send(xmlstring)
+ *        .end(callback);
+ *
+ *      request.post('/')
+ *        .type('application/xml')
+ *        .send(xmlstring)
+ *        .end(callback);
+ *
+ * @param {String} type
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.type = function(type){
+  this.set('Content-Type', request.types[type] || type);
+  return this;
+};
+
+/**
+ * Set Accept to `type`, mapping values from `request.types`.
+ *
+ * Examples:
+ *
+ *      superagent.types.json = 'application/json';
+ *
+ *      request.get('/agent')
+ *        .accept('json')
+ *        .end(callback);
+ *
+ *      request.get('/agent')
+ *        .accept('application/json')
+ *        .end(callback);
+ *
+ * @param {String} accept
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.accept = function(type){
+  this.set('Accept', request.types[type] || type);
+  return this;
+};
+
+/**
+ * Set Authorization field value with `user` and `pass`.
+ *
+ * @param {String} user
+ * @param {String} pass
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.auth = function(user, pass){
+  var str = btoa(user + ':' + pass);
+  this.set('Authorization', 'Basic ' + str);
+  return this;
+};
+
+/**
+* Add query-string `val`.
+*
+* Examples:
+*
+*   request.get('/shoes')
+*     .query('size=10')
+*     .query({ color: 'blue' })
+*
+* @param {Object|String} val
+* @return {Request} for chaining
+* @api public
+*/
+
+Request.prototype.query = function(val){
+  if ('string' != typeof val) val = serialize(val);
+  if (val) this._query.push(val);
+  return this;
+};
+
+/**
+ * Write the field `name` and `val` for "multipart/form-data"
+ * request bodies.
+ *
+ * ``` js
+ * request.post('/upload')
+ *   .field('foo', 'bar')
+ *   .end(callback);
+ * ```
+ *
+ * @param {String} name
+ * @param {String|Blob|File} val
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.field = function(name, val){
+  if (!this._formData) this._formData = new FormData();
+  this._formData.append(name, val);
+  return this;
+};
+
+/**
+ * Queue the given `file` as an attachment to the specified `field`,
+ * with optional `filename`.
+ *
+ * ``` js
+ * request.post('/upload')
+ *   .attach(new Blob(['<a id="a"><b id="b">hey!</b></a>'], { type: "text/html"}))
+ *   .end(callback);
+ * ```
+ *
+ * @param {String} field
+ * @param {Blob|File} file
+ * @param {String} filename
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.attach = function(field, file, filename){
+  if (!this._formData) this._formData = new FormData();
+  this._formData.append(field, file, filename);
+  return this;
+};
+
+/**
+ * Send `data`, defaulting the `.type()` to "json" when
+ * an object is given.
+ *
+ * Examples:
+ *
+ *       // querystring
+ *       request.get('/search')
+ *         .end(callback)
+ *
+ *       // multiple data "writes"
+ *       request.get('/search')
+ *         .send({ search: 'query' })
+ *         .send({ range: '1..5' })
+ *         .send({ order: 'desc' })
+ *         .end(callback)
+ *
+ *       // manual json
+ *       request.post('/user')
+ *         .type('json')
+ *         .send('{"name":"tj"})
+ *         .end(callback)
+ *
+ *       // auto json
+ *       request.post('/user')
+ *         .send({ name: 'tj' })
+ *         .end(callback)
+ *
+ *       // manual x-www-form-urlencoded
+ *       request.post('/user')
+ *         .type('form')
+ *         .send('name=tj')
+ *         .end(callback)
+ *
+ *       // auto x-www-form-urlencoded
+ *       request.post('/user')
+ *         .type('form')
+ *         .send({ name: 'tj' })
+ *         .end(callback)
+ *
+ *       // defaults to x-www-form-urlencoded
+  *      request.post('/user')
+  *        .send('name=tobi')
+  *        .send('species=ferret')
+  *        .end(callback)
+ *
+ * @param {String|Object} data
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.send = function(data){
+  var obj = isObject(data);
+  var type = this.getHeader('Content-Type');
+
+  // merge
+  if (obj && isObject(this._data)) {
+    for (var key in data) {
+      this._data[key] = data[key];
+    }
+  } else if ('string' == typeof data) {
+    if (!type) this.type('form');
+    type = this.getHeader('Content-Type');
+    if ('application/x-www-form-urlencoded' == type) {
+      this._data = this._data
+        ? this._data + '&' + data
+        : data;
+    } else {
+      this._data = (this._data || '') + data;
+    }
+  } else {
+    this._data = data;
+  }
+
+  if (!obj) return this;
+  if (!type) this.type('json');
+  return this;
+};
+
+/**
+ * Invoke the callback with `err` and `res`
+ * and handle arity check.
+ *
+ * @param {Error} err
+ * @param {Response} res
+ * @api private
+ */
+
+Request.prototype.callback = function(err, res){
+  var fn = this._callback;
+  this.clearTimeout();
+  if (2 == fn.length) return fn(err, res);
+  if (err) return this.emit('error', err);
+  fn(res);
+};
+
+/**
+ * Invoke callback with x-domain error.
+ *
+ * @api private
+ */
+
+Request.prototype.crossDomainError = function(){
+  var err = new Error('Origin is not allowed by Access-Control-Allow-Origin');
+  err.crossDomain = true;
+  this.callback(err);
+};
+
+/**
+ * Invoke callback with timeout error.
+ *
+ * @api private
+ */
+
+Request.prototype.timeoutError = function(){
+  var timeout = this._timeout;
+  var err = new Error('timeout of ' + timeout + 'ms exceeded');
+  err.timeout = timeout;
+  this.callback(err);
+};
+
+/**
+ * Enable transmission of cookies with x-domain requests.
+ *
+ * Note that for this to work the origin must not be
+ * using "Access-Control-Allow-Origin" with a wildcard,
+ * and also must set "Access-Control-Allow-Credentials"
+ * to "true".
+ *
+ * @api public
+ */
+
+Request.prototype.withCredentials = function(){
+  this._withCredentials = true;
+  return this;
+};
+
+/**
+ * Initiate request, invoking callback `fn(res)`
+ * with an instanceof `Response`.
+ *
+ * @param {Function} fn
+ * @return {Request} for chaining
+ * @api public
+ */
+
+Request.prototype.end = function(fn){
+  var self = this;
+  var xhr = this.xhr = getXHR();
+  var query = this._query.join('&');
+  var timeout = this._timeout;
+  var data = this._formData || this._data;
+
+  // store callback
+  this._callback = fn || noop;
+
+  // state change
+  xhr.onreadystatechange = function(){
+    if (4 != xhr.readyState) return;
+    if (0 == xhr.status) {
+      if (self.aborted) return self.timeoutError();
+      return self.crossDomainError();
+    }
+    self.emit('end');
+  };
+
+  // progress
+  if (xhr.upload) {
+    xhr.upload.onprogress = function(e){
+      e.percent = e.loaded / e.total * 100;
+      self.emit('progress', e);
+    };
+  }
+
+  // timeout
+  if (timeout && !this._timer) {
+    this._timer = setTimeout(function(){
+      self.abort();
+    }, timeout);
+  }
+
+  // querystring
+  if (query) {
+    query = request.serializeObject(query);
+    this.url += ~this.url.indexOf('?')
+      ? '&' + query
+      : '?' + query;
+  }
+
+  // initiate request
+  xhr.open(this.method, this.url, true);
+
+  // CORS
+  if (this._withCredentials) xhr.withCredentials = true;
+
+  // body
+  if ('GET' != this.method && 'HEAD' != this.method && 'string' != typeof data && !isHost(data)) {
+    // serialize stuff
+    var serialize = request.serialize[this.getHeader('Content-Type')];
+    if (serialize) data = serialize(data);
+  }
+
+  // set header fields
+  for (var field in this.header) {
+    if (null == this.header[field]) continue;
+    xhr.setRequestHeader(field, this.header[field]);
+  }
+
+  // send stuff
+  this.emit('request', this);
+  xhr.send(data);
+  return this;
+};
+
+/**
+ * Expose `Request`.
+ */
+
+request.Request = Request;
+
+/**
+ * Issue a request:
+ *
+ * Examples:
+ *
+ *    request('GET', '/users').end(callback)
+ *    request('/users').end(callback)
+ *    request('/users', callback)
+ *
+ * @param {String} method
+ * @param {String|Function} url or callback
+ * @return {Request}
+ * @api public
+ */
+
+function request(method, url) {
+  // callback
+  if ('function' == typeof url) {
+    return new Request('GET', method).end(url);
+  }
+
+  // url first
+  if (1 == arguments.length) {
+    return new Request('GET', method);
+  }
+
+  return new Request(method, url);
+}
+
+/**
+ * GET `url` with optional callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Mixed|Function} data or fn
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.get = function(url, data, fn){
+  var req = request('GET', url);
+  if ('function' == typeof data) fn = data, data = null;
+  if (data) req.query(data);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * HEAD `url` with optional callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Mixed|Function} data or fn
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.head = function(url, data, fn){
+  var req = request('HEAD', url);
+  if ('function' == typeof data) fn = data, data = null;
+  if (data) req.send(data);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * DELETE `url` with optional callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.del = function(url, fn){
+  var req = request('DELETE', url);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * PATCH `url` with optional `data` and callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Mixed} data
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.patch = function(url, data, fn){
+  var req = request('PATCH', url);
+  if ('function' == typeof data) fn = data, data = null;
+  if (data) req.send(data);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * POST `url` with optional `data` and callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Mixed} data
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.post = function(url, data, fn){
+  var req = request('POST', url);
+  if ('function' == typeof data) fn = data, data = null;
+  if (data) req.send(data);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * PUT `url` with optional `data` and callback `fn(res)`.
+ *
+ * @param {String} url
+ * @param {Mixed|Function} data or fn
+ * @param {Function} fn
+ * @return {Request}
+ * @api public
+ */
+
+request.put = function(url, data, fn){
+  var req = request('PUT', url);
+  if ('function' == typeof data) fn = data, data = null;
+  if (data) req.send(data);
+  if (fn) req.end(fn);
+  return req;
+};
+
+/**
+ * Expose `request`.
+ */
+
+module.exports = request;
+
+});
+
+require.register("component~search.js@1.1.0", function (exports, module) {
+
+var crawler = search.crawler = require('component~search.js@1.1.0/client/crawler.js');
+var fns = require('component~search.js@1.1.0/lib/functions.js');
+
+module.exports = search
+
+/**
+ * Right now, `query` must be a string,
+ * and we'll search intelligently based on it.
+ * In the future, we should allow options
+ * like the node version.
+ */
+
+function search(query, limit) {
+  query = (query || '').toLowerCase().trim();
+
+  // don't need to show every component
+  if (!query) {
+    return crawler.components
+      .sort(fns.sortBy.starsAndWatchers)
+      .slice(0, limit || 25);
+  }
+
+  // search by <user>/<repo>
+  if (/^[\w-]+\//.test(query)) {
+    return crawler.components
+      .filter(function (json) {
+        return !json.github.full_name.indexOf(query);
+      })
+      .sort(function (a, b) {
+        // sort by the length of the name, ascending
+        return a.github.full_name.length
+          - b.github.full_name.length;
+      })
+      .slice(0, limit || 25)
+  }
+
+  var filters = [];
+
+  filters.push(fns.filterBy.text(query));
+
+  query.split(/\s*/)
+    .filter(Boolean)
+    .filter(function (keyword) {
+      // check only alphanumerics
+      return /^\w+$/.test(keyword);
+    })
+    .forEach(function (keyword) {
+      filters.push(fns.filterBy.keyword(keyword));
+    })
+
+  return crawler.components
+    .filter(function (json) {
+      return filters.some(function (filter) {
+        return filter(json);
+      });
+    })
+    .sort(fns.sortBy.starsAndWatchers)
+    .slice(0, limit || 25);
+}
+});
+
+require.register("component~search.js@1.1.0/client/crawler.js", function (exports, module) {
+
+/**
+ * Load all the components from the crawler.
+ */
+
+var request = require('visionmedia~superagent@0.21.0');
+
+var loaded = false;
+var loading = false;
+var queue = [];
+
+module.exports = crawler;
+
+// automatically load all the crawled data on page load
+crawler();
+
+function crawler(done) {
+  done = done || noop;
+  if (loaded) return done();
+  if (loading) return queue.push(done);
+  loading = true;
+
+  request
+  .get('http://component-crawler.herokuapp.com/.json')
+  .end(function (err, res) {
+    crawler.users = res.body.users;
+    crawler.components = res.body.components;
+
+    loaded = true;
+    loading = false;
+    done();
+    while (queue.length) queue.shift()();
+  })
+}
+
+function noop(){}
+
+});
+
+require.register("component~search.js@1.1.0/lib/functions.js", function (exports, module) {
+
+exports.filterBy = {
+  owner: function (owner) {
+    return function (json) {
+      return json.github.owner.login === owner;
+    }
+  },
+  keyword: function (keyword) {
+    return function (json) {
+      var keywords = json.keywords;
+      if (!keywords) return false;
+      return ~json.keywords.indexOf(keyword);
+    }
+  },
+  text: function (string) {
+    string = escapeRegExp(string).trim();
+    var terms = string.split(/\s+/);
+    var re = new RegExp(terms.join('.* .*'), 'i');
+    return function (json) {
+      return re.test(json.name)
+        || re.test(json.description)
+        || re.test(json.github.full_name);
+    }
+  }
+}
+
+exports.sortBy = {
+  starsAndWatchers: function (a, b) {
+    return followScore(b) - followScore(a);
+  }
+}
+
+function followScore(json) {
+  var watchers = json.github.subscribers_count || 0;
+  var stars = json.github.stargazers_count || 0;
+  return watchers * 10 + stars;
+}
+
+function escapeRegExp(str) {
+  return String(str).replace(/([.*+?=^!:${}()|[\]\/\\])/g, '\\$1');
+}
+});
+
+require.register("component~indexof@0.0.1", function (exports, module) {
+
+var indexOf = [].indexOf;
+
+module.exports = function(arr, obj){
+  if (indexOf) return arr.indexOf(obj);
+  for (var i = 0; i < arr.length; ++i) {
+    if (arr[i] === obj) return i;
+  }
+  return -1;
+};
+});
+
+require.register("component~indexof@0.0.3", function (exports, module) {
+module.exports = function(arr, obj){
+  if (arr.indexOf) return arr.indexOf(obj);
+  for (var i = 0; i < arr.length; ++i) {
+    if (arr[i] === obj) return i;
+  }
+  return -1;
+};
+});
+
+require.register("component~classes@1.1.1", function (exports, module) {
+
+/**
+ * Module dependencies.
+ */
+
+var index = require('component~indexof@0.0.3');
+
+/**
+ * Whitespace regexp.
+ */
+
+var re = /\s+/;
+
+/**
+ * toString reference.
+ */
+
+var toString = Object.prototype.toString;
+
+/**
+ * Wrap `el` in a `ClassList`.
+ *
+ * @param {Element} el
+ * @return {ClassList}
+ * @api public
+ */
+
+module.exports = function(el){
+  return new ClassList(el);
+};
+
+/**
+ * Initialize a new ClassList for `el`.
+ *
+ * @param {Element} el
+ * @api private
+ */
+
+function ClassList(el) {
+  this.el = el;
+  this.list = el.classList;
+}
+
+/**
+ * Add class `name` if not already present.
+ *
+ * @param {String} name
+ * @return {ClassList}
+ * @api public
+ */
+
+ClassList.prototype.add = function(name){
+  // classList
+  if (this.list) {
+    this.list.add(name);
+    return this;
+  }
+
+  // fallback
+  var arr = this.array();
+  var i = index(arr, name);
+  if (!~i) arr.push(name);
+  this.el.className = arr.join(' ');
+  return this;
+};
+
+/**
+ * Remove class `name` when present, or
+ * pass a regular expression to remove
+ * any which match.
+ *
+ * @param {String|RegExp} name
+ * @return {ClassList}
+ * @api public
+ */
+
+ClassList.prototype.remove = function(name){
+  if ('[object RegExp]' == toString.call(name)) {
+    return this.removeMatching(name);
+  }
+
+  // classList
+  if (this.list) {
+    this.list.remove(name);
+    return this;
+  }
+
+  // fallback
+  var arr = this.array();
+  var i = index(arr, name);
+  if (~i) arr.splice(i, 1);
+  this.el.className = arr.join(' ');
+  return this;
+};
+
+/**
+ * Remove all classes matching `re`.
+ *
+ * @param {RegExp} re
+ * @return {ClassList}
+ * @api private
+ */
+
+ClassList.prototype.removeMatching = function(re){
+  var arr = this.array();
+  for (var i = 0; i < arr.length; i++) {
+    if (re.test(arr[i])) {
+      this.remove(arr[i]);
+    }
+  }
+  return this;
+};
+
+/**
+ * Toggle class `name`.
+ *
+ * @param {String} name
+ * @return {ClassList}
+ * @api public
+ */
+
+ClassList.prototype.toggle = function(name){
+  // classList
+  if (this.list) {
+    this.list.toggle(name);
+    return this;
+  }
+
+  // fallback
+  if (this.has(name)) {
+    this.remove(name);
+  } else {
+    this.add(name);
+  }
+  return this;
+};
+
+/**
+ * Return an array of classes.
+ *
+ * @return {Array}
+ * @api public
+ */
+
+ClassList.prototype.array = function(){
+  var arr = this.el.className.split(re);
+  if ('' === arr[0]) arr.pop();
+  return arr;
+};
+
+/**
+ * Check if class `name` is present.
+ *
+ * @param {String} name
+ * @return {ClassList}
+ * @api public
+ */
+
+ClassList.prototype.has =
+ClassList.prototype.contains = function(name){
+  return this.list
+    ? this.list.contains(name)
+    : !! ~index(this.array(), name);
+};
+
+});
+
 require.register("component~query@0.0.1", function (exports, module) {
 
 function one(selector, el) {
@@ -1531,16 +3018,16 @@ function ignore(a, attr){
 
 });
 
-require.register("yields~uniq@master", function (exports, module) {
+require.register("yields~uniq@1.0.0", function (exports, module) {
 
 /**
  * dependencies
  */
 
 try {
-  var indexOf = require("component~indexof@0.0.1");
+  var indexOf = require('component~indexof@0.0.1');
 } catch(e){
-  var indexOf = require("indexof-component");
+  var indexOf = require('indexof-component');
 }
 
 /**
@@ -1575,9 +3062,9 @@ require.register("yields~carry@0.0.1", function (exports, module) {
  * dependencies
  */
 
-var merge = require("yields~merge-attrs@0.0.1")
-  , classes = require("component~classes@1.1.1")
-  , uniq = require("yields~uniq@master");
+var merge = require('yields~merge-attrs@0.0.1')
+  , classes = require('component~classes@1.1.1')
+  , uniq = require('yields~uniq@1.0.0');
 
 /**
  * Export `carry`
@@ -1638,9 +3125,9 @@ carry.classes = function(a, b){
 
 require.register("visionmedia~debug@0.7.4", function (exports, module) {
 if ('undefined' == typeof window) {
-  module.exports = require("./lib/debug");
+  module.exports = require('./lib/debug');
 } else {
-  module.exports = require("visionmedia~debug@0.7.4/debug.js");
+  module.exports = require('visionmedia~debug@0.7.4/debug.js');
 }
 
 });
@@ -1791,18 +3278,18 @@ require.register("component~reactive@1.1.0", function (exports, module) {
  * Module dependencies.
  */
 
-var Emitter = require("component~emitter@1.1.1");
-var query = require("component~query@0.0.1");
-var domify = require("component~domify@1.2.1");
-var debug = require("visionmedia~debug@0.7.4")('reactive');
+var Emitter = require('component~emitter@1.1.1');
+var query = require('component~query@0.0.1');
+var domify = require('component~domify@1.2.1');
+var debug = require('visionmedia~debug@0.7.4')('reactive');
 
-var Adapter = require("component~reactive@1.1.0/lib/adapter.js");
-var AttrBinding = require("component~reactive@1.1.0/lib/attr-binding.js");
-var TextBinding = require("component~reactive@1.1.0/lib/text-binding.js");
-var bindings = require("component~reactive@1.1.0/lib/bindings.js");
-var Binding = require("component~reactive@1.1.0/lib/binding.js");
-var utils = require("component~reactive@1.1.0/lib/utils.js");
-var walk = require("component~reactive@1.1.0/lib/walk.js");
+var Adapter = require('component~reactive@1.1.0/lib/adapter.js');
+var AttrBinding = require('component~reactive@1.1.0/lib/attr-binding.js');
+var TextBinding = require('component~reactive@1.1.0/lib/text-binding.js');
+var bindings = require('component~reactive@1.1.0/lib/bindings.js');
+var Binding = require('component~reactive@1.1.0/lib/binding.js');
+var utils = require('component~reactive@1.1.0/lib/utils.js');
+var walk = require('component~reactive@1.1.0/lib/walk.js');
 
 /**
  * Expose `Reactive`.
@@ -2132,8 +3619,8 @@ require.register("component~reactive@1.1.0/lib/utils.js", function (exports, mod
  * Module dependencies.
  */
 
-var debug = require("visionmedia~debug@0.7.4")('reactive:utils');
-//var props = require("props");
+var debug = require('visionmedia~debug@0.7.4')('reactive:utils');
+//var props = require('props');
 
 /**
  * Function cache.
@@ -2275,8 +3762,8 @@ require.register("component~reactive@1.1.0/lib/text-binding.js", function (expor
  * Module dependencies.
  */
 
-var debug = require("visionmedia~debug@0.7.4")('reactive:text-binding');
-var utils = require("component~reactive@1.1.0/lib/utils.js");
+var debug = require('visionmedia~debug@0.7.4')('reactive:text-binding');
+var utils = require('component~reactive@1.1.0/lib/utils.js');
 
 /**
  * Expose `TextBinding`.
@@ -2345,8 +3832,8 @@ require.register("component~reactive@1.1.0/lib/attr-binding.js", function (expor
  * Module dependencies.
  */
 
-var debug = require("visionmedia~debug@0.7.4")('reactive:attr-binding');
-var utils = require("component~reactive@1.1.0/lib/utils.js");
+var debug = require('visionmedia~debug@0.7.4')('reactive:attr-binding');
+var utils = require('component~reactive@1.1.0/lib/utils.js');
 
 /**
  * Expose `AttrBinding`.
@@ -2412,8 +3899,8 @@ AttrBinding.prototype.render = function(){
 });
 
 require.register("component~reactive@1.1.0/lib/binding.js", function (exports, module) {
-var hasInterpolation = require("component~reactive@1.1.0/lib/utils.js").hasInterpolation;
-var interpolationProps = require("component~reactive@1.1.0/lib/utils.js").interpolationProps;
+var hasInterpolation = require('component~reactive@1.1.0/lib/utils.js').hasInterpolation;
+var interpolationProps = require('component~reactive@1.1.0/lib/utils.js').interpolationProps;
 
 /**
  * Expose `Binding`.
@@ -2518,11 +4005,11 @@ require.register("component~reactive@1.1.0/lib/bindings.js", function (exports, 
  * Module dependencies.
  */
 
-var carry = require("yields~carry@0.0.1");
-var classes = require("component~classes@1.1.1");
-var event = require("component~event@0.1.0");
+var carry = require('yields~carry@0.0.1');
+var classes = require('component~classes@1.1.1');
+var event = require('component~event@0.1.0');
 
-var each_binding = require("component~reactive@1.1.0/lib/each.js");
+var each_binding = require('component~reactive@1.1.0/lib/each.js');
 
 /**
  * Attributes supported.
@@ -2987,1188 +4474,6 @@ module.exports = function walk(el, process, done) {
 
 });
 
-require.register("component~reduce@1.0.1", function (exports, module) {
-
-/**
- * Reduce `arr` with `fn`.
- *
- * @param {Array} arr
- * @param {Function} fn
- * @param {Mixed} initial
- *
- * TODO: combatible error handling?
- */
-
-module.exports = function(arr, fn, initial){  
-  var idx = 0;
-  var len = arr.length;
-  var curr = arguments.length == 3
-    ? initial
-    : arr[idx++];
-
-  while (idx < len) {
-    curr = fn.call(null, curr, arr[idx], ++idx, arr);
-  }
-  
-  return curr;
-};
-});
-
-require.register("visionmedia~superagent@0.17.0", function (exports, module) {
-/**
- * Module dependencies.
- */
-
-var Emitter = require("component~emitter@1.1.2");
-var reduce = require("component~reduce@1.0.1");
-
-/**
- * Root reference for iframes.
- */
-
-var root = 'undefined' == typeof window
-  ? this
-  : window;
-
-/**
- * Noop.
- */
-
-function noop(){};
-
-/**
- * Check if `obj` is a host object,
- * we don't want to serialize these :)
- *
- * TODO: future proof, move to compoent land
- *
- * @param {Object} obj
- * @return {Boolean}
- * @api private
- */
-
-function isHost(obj) {
-  var str = {}.toString.call(obj);
-
-  switch (str) {
-    case '[object File]':
-    case '[object Blob]':
-    case '[object FormData]':
-      return true;
-    default:
-      return false;
-  }
-}
-
-/**
- * Determine XHR.
- */
-
-function getXHR() {
-  if (root.XMLHttpRequest
-    && ('file:' != root.location.protocol || !root.ActiveXObject)) {
-    return new XMLHttpRequest;
-  } else {
-    try { return new ActiveXObject('Microsoft.XMLHTTP'); } catch(e) {}
-    try { return new ActiveXObject('Msxml2.XMLHTTP.6.0'); } catch(e) {}
-    try { return new ActiveXObject('Msxml2.XMLHTTP.3.0'); } catch(e) {}
-    try { return new ActiveXObject('Msxml2.XMLHTTP'); } catch(e) {}
-  }
-  return false;
-}
-
-/**
- * Removes leading and trailing whitespace, added to support IE.
- *
- * @param {String} s
- * @return {String}
- * @api private
- */
-
-var trim = ''.trim
-  ? function(s) { return s.trim(); }
-  : function(s) { return s.replace(/(^\s*|\s*$)/g, ''); };
-
-/**
- * Check if `obj` is an object.
- *
- * @param {Object} obj
- * @return {Boolean}
- * @api private
- */
-
-function isObject(obj) {
-  return obj === Object(obj);
-}
-
-/**
- * Serialize the given `obj`.
- *
- * @param {Object} obj
- * @return {String}
- * @api private
- */
-
-function serialize(obj) {
-  if (!isObject(obj)) return obj;
-  var pairs = [];
-  for (var key in obj) {
-    if (null != obj[key]) {
-      pairs.push(encodeURIComponent(key)
-        + '=' + encodeURIComponent(obj[key]));
-    }
-  }
-  return pairs.join('&');
-}
-
-/**
- * Expose serialization method.
- */
-
- request.serializeObject = serialize;
-
- /**
-  * Parse the given x-www-form-urlencoded `str`.
-  *
-  * @param {String} str
-  * @return {Object}
-  * @api private
-  */
-
-function parseString(str) {
-  var obj = {};
-  var pairs = str.split('&');
-  var parts;
-  var pair;
-
-  for (var i = 0, len = pairs.length; i < len; ++i) {
-    pair = pairs[i];
-    parts = pair.split('=');
-    obj[decodeURIComponent(parts[0])] = decodeURIComponent(parts[1]);
-  }
-
-  return obj;
-}
-
-/**
- * Expose parser.
- */
-
-request.parseString = parseString;
-
-/**
- * Default MIME type map.
- *
- *     superagent.types.xml = 'application/xml';
- *
- */
-
-request.types = {
-  html: 'text/html',
-  json: 'application/json',
-  xml: 'application/xml',
-  urlencoded: 'application/x-www-form-urlencoded',
-  'form': 'application/x-www-form-urlencoded',
-  'form-data': 'application/x-www-form-urlencoded'
-};
-
-/**
- * Default serialization map.
- *
- *     superagent.serialize['application/xml'] = function(obj){
- *       return 'generated xml here';
- *     };
- *
- */
-
- request.serialize = {
-   'application/x-www-form-urlencoded': serialize,
-   'application/json': JSON.stringify
- };
-
- /**
-  * Default parsers.
-  *
-  *     superagent.parse['application/xml'] = function(str){
-  *       return { object parsed from str };
-  *     };
-  *
-  */
-
-request.parse = {
-  'application/x-www-form-urlencoded': parseString,
-  'application/json': JSON.parse
-};
-
-/**
- * Parse the given header `str` into
- * an object containing the mapped fields.
- *
- * @param {String} str
- * @return {Object}
- * @api private
- */
-
-function parseHeader(str) {
-  var lines = str.split(/\r?\n/);
-  var fields = {};
-  var index;
-  var line;
-  var field;
-  var val;
-
-  lines.pop(); // trailing CRLF
-
-  for (var i = 0, len = lines.length; i < len; ++i) {
-    line = lines[i];
-    index = line.indexOf(':');
-    field = line.slice(0, index).toLowerCase();
-    val = trim(line.slice(index + 1));
-    fields[field] = val;
-  }
-
-  return fields;
-}
-
-/**
- * Return the mime type for the given `str`.
- *
- * @param {String} str
- * @return {String}
- * @api private
- */
-
-function type(str){
-  return str.split(/ *; */).shift();
-};
-
-/**
- * Return header field parameters.
- *
- * @param {String} str
- * @return {Object}
- * @api private
- */
-
-function params(str){
-  return reduce(str.split(/ *; */), function(obj, str){
-    var parts = str.split(/ *= */)
-      , key = parts.shift()
-      , val = parts.shift();
-
-    if (key && val) obj[key] = val;
-    return obj;
-  }, {});
-};
-
-/**
- * Initialize a new `Response` with the given `xhr`.
- *
- *  - set flags (.ok, .error, etc)
- *  - parse header
- *
- * Examples:
- *
- *  Aliasing `superagent` as `request` is nice:
- *
- *      request = superagent;
- *
- *  We can use the promise-like API, or pass callbacks:
- *
- *      request.get('/').end(function(res){});
- *      request.get('/', function(res){});
- *
- *  Sending data can be chained:
- *
- *      request
- *        .post('/user')
- *        .send({ name: 'tj' })
- *        .end(function(res){});
- *
- *  Or passed to `.send()`:
- *
- *      request
- *        .post('/user')
- *        .send({ name: 'tj' }, function(res){});
- *
- *  Or passed to `.post()`:
- *
- *      request
- *        .post('/user', { name: 'tj' })
- *        .end(function(res){});
- *
- * Or further reduced to a single call for simple cases:
- *
- *      request
- *        .post('/user', { name: 'tj' }, function(res){});
- *
- * @param {XMLHTTPRequest} xhr
- * @param {Object} options
- * @api private
- */
-
-function Response(req, options) {
-  options = options || {};
-  this.req = req;
-  this.xhr = this.req.xhr;
-  this.text = this.xhr.responseText;
-  this.setStatusProperties(this.xhr.status);
-  this.header = this.headers = parseHeader(this.xhr.getAllResponseHeaders());
-  // getAllResponseHeaders sometimes falsely returns "" for CORS requests, but
-  // getResponseHeader still works. so we get content-type even if getting
-  // other headers fails.
-  this.header['content-type'] = this.xhr.getResponseHeader('content-type');
-  this.setHeaderProperties(this.header);
-  this.body = this.req.method != 'HEAD'
-    ? this.parseBody(this.text)
-    : null;
-}
-
-/**
- * Get case-insensitive `field` value.
- *
- * @param {String} field
- * @return {String}
- * @api public
- */
-
-Response.prototype.get = function(field){
-  return this.header[field.toLowerCase()];
-};
-
-/**
- * Set header related properties:
- *
- *   - `.type` the content type without params
- *
- * A response of "Content-Type: text/plain; charset=utf-8"
- * will provide you with a `.type` of "text/plain".
- *
- * @param {Object} header
- * @api private
- */
-
-Response.prototype.setHeaderProperties = function(header){
-  // content-type
-  var ct = this.header['content-type'] || '';
-  this.type = type(ct);
-
-  // params
-  var obj = params(ct);
-  for (var key in obj) this[key] = obj[key];
-};
-
-/**
- * Parse the given body `str`.
- *
- * Used for auto-parsing of bodies. Parsers
- * are defined on the `superagent.parse` object.
- *
- * @param {String} str
- * @return {Mixed}
- * @api private
- */
-
-Response.prototype.parseBody = function(str){
-  var parse = request.parse[this.type];
-  return parse
-    ? parse(str)
-    : null;
-};
-
-/**
- * Set flags such as `.ok` based on `status`.
- *
- * For example a 2xx response will give you a `.ok` of __true__
- * whereas 5xx will be __false__ and `.error` will be __true__. The
- * `.clientError` and `.serverError` are also available to be more
- * specific, and `.statusType` is the class of error ranging from 1..5
- * sometimes useful for mapping respond colors etc.
- *
- * "sugar" properties are also defined for common cases. Currently providing:
- *
- *   - .noContent
- *   - .badRequest
- *   - .unauthorized
- *   - .notAcceptable
- *   - .notFound
- *
- * @param {Number} status
- * @api private
- */
-
-Response.prototype.setStatusProperties = function(status){
-  var type = status / 100 | 0;
-
-  // status / class
-  this.status = status;
-  this.statusType = type;
-
-  // basics
-  this.info = 1 == type;
-  this.ok = 2 == type;
-  this.clientError = 4 == type;
-  this.serverError = 5 == type;
-  this.error = (4 == type || 5 == type)
-    ? this.toError()
-    : false;
-
-  // sugar
-  this.accepted = 202 == status;
-  this.noContent = 204 == status || 1223 == status;
-  this.badRequest = 400 == status;
-  this.unauthorized = 401 == status;
-  this.notAcceptable = 406 == status;
-  this.notFound = 404 == status;
-  this.forbidden = 403 == status;
-};
-
-/**
- * Return an `Error` representative of this response.
- *
- * @return {Error}
- * @api public
- */
-
-Response.prototype.toError = function(){
-  var req = this.req;
-  var method = req.method;
-  var path = req.path;
-
-  var msg = 'cannot ' + method + ' ' + path + ' (' + this.status + ')';
-  var err = new Error(msg);
-  err.status = this.status;
-  err.method = method;
-  err.path = path;
-
-  return err;
-};
-
-/**
- * Expose `Response`.
- */
-
-request.Response = Response;
-
-/**
- * Initialize a new `Request` with the given `method` and `url`.
- *
- * @param {String} method
- * @param {String} url
- * @api public
- */
-
-function Request(method, url) {
-  var self = this;
-  Emitter.call(this);
-  this._query = this._query || [];
-  this.method = method;
-  this.url = url;
-  this.header = {};
-  this._header = {};
-  this.on('end', function(){
-    var res = new Response(self);
-    if ('HEAD' == method) res.text = null;
-    self.callback(null, res);
-  });
-}
-
-/**
- * Mixin `Emitter`.
- */
-
-Emitter(Request.prototype);
-
-/**
- * Allow for extension
- */
-
-Request.prototype.use = function(fn) {
-  fn(this);
-  return this;
-}
-
-/**
- * Set timeout to `ms`.
- *
- * @param {Number} ms
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.timeout = function(ms){
-  this._timeout = ms;
-  return this;
-};
-
-/**
- * Clear previous timeout.
- *
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.clearTimeout = function(){
-  this._timeout = 0;
-  clearTimeout(this._timer);
-  return this;
-};
-
-/**
- * Abort the request, and clear potential timeout.
- *
- * @return {Request}
- * @api public
- */
-
-Request.prototype.abort = function(){
-  if (this.aborted) return;
-  this.aborted = true;
-  this.xhr.abort();
-  this.clearTimeout();
-  this.emit('abort');
-  return this;
-};
-
-/**
- * Set header `field` to `val`, or multiple fields with one object.
- *
- * Examples:
- *
- *      req.get('/')
- *        .set('Accept', 'application/json')
- *        .set('X-API-Key', 'foobar')
- *        .end(callback);
- *
- *      req.get('/')
- *        .set({ Accept: 'application/json', 'X-API-Key': 'foobar' })
- *        .end(callback);
- *
- * @param {String|Object} field
- * @param {String} val
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.set = function(field, val){
-  if (isObject(field)) {
-    for (var key in field) {
-      this.set(key, field[key]);
-    }
-    return this;
-  }
-  this._header[field.toLowerCase()] = val;
-  this.header[field] = val;
-  return this;
-};
-
-/**
- * Get case-insensitive header `field` value.
- *
- * @param {String} field
- * @return {String}
- * @api private
- */
-
-Request.prototype.getHeader = function(field){
-  return this._header[field.toLowerCase()];
-};
-
-/**
- * Set Content-Type to `type`, mapping values from `request.types`.
- *
- * Examples:
- *
- *      superagent.types.xml = 'application/xml';
- *
- *      request.post('/')
- *        .type('xml')
- *        .send(xmlstring)
- *        .end(callback);
- *
- *      request.post('/')
- *        .type('application/xml')
- *        .send(xmlstring)
- *        .end(callback);
- *
- * @param {String} type
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.type = function(type){
-  this.set('Content-Type', request.types[type] || type);
-  return this;
-};
-
-/**
- * Set Accept to `type`, mapping values from `request.types`.
- *
- * Examples:
- *
- *      superagent.types.json = 'application/json';
- *
- *      request.get('/agent')
- *        .accept('json')
- *        .end(callback);
- *
- *      request.get('/agent')
- *        .accept('application/json')
- *        .end(callback);
- *
- * @param {String} accept
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.accept = function(type){
-  this.set('Accept', request.types[type] || type);
-  return this;
-};
-
-/**
- * Set Authorization field value with `user` and `pass`.
- *
- * @param {String} user
- * @param {String} pass
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.auth = function(user, pass){
-  var str = btoa(user + ':' + pass);
-  this.set('Authorization', 'Basic ' + str);
-  return this;
-};
-
-/**
-* Add query-string `val`.
-*
-* Examples:
-*
-*   request.get('/shoes')
-*     .query('size=10')
-*     .query({ color: 'blue' })
-*
-* @param {Object|String} val
-* @return {Request} for chaining
-* @api public
-*/
-
-Request.prototype.query = function(val){
-  if ('string' != typeof val) val = serialize(val);
-  if (val) this._query.push(val);
-  return this;
-};
-
-/**
- * Send `data`, defaulting the `.type()` to "json" when
- * an object is given.
- *
- * Examples:
- *
- *       // querystring
- *       request.get('/search')
- *         .end(callback)
- *
- *       // multiple data "writes"
- *       request.get('/search')
- *         .send({ search: 'query' })
- *         .send({ range: '1..5' })
- *         .send({ order: 'desc' })
- *         .end(callback)
- *
- *       // manual json
- *       request.post('/user')
- *         .type('json')
- *         .send('{"name":"tj"})
- *         .end(callback)
- *
- *       // auto json
- *       request.post('/user')
- *         .send({ name: 'tj' })
- *         .end(callback)
- *
- *       // manual x-www-form-urlencoded
- *       request.post('/user')
- *         .type('form')
- *         .send('name=tj')
- *         .end(callback)
- *
- *       // auto x-www-form-urlencoded
- *       request.post('/user')
- *         .type('form')
- *         .send({ name: 'tj' })
- *         .end(callback)
- *
- *       // defaults to x-www-form-urlencoded
-  *      request.post('/user')
-  *        .send('name=tobi')
-  *        .send('species=ferret')
-  *        .end(callback)
- *
- * @param {String|Object} data
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.send = function(data){
-  var obj = isObject(data);
-  var type = this.getHeader('Content-Type');
-
-  // merge
-  if (obj && isObject(this._data)) {
-    for (var key in data) {
-      this._data[key] = data[key];
-    }
-  } else if ('string' == typeof data) {
-    if (!type) this.type('form');
-    type = this.getHeader('Content-Type');
-    if ('application/x-www-form-urlencoded' == type) {
-      this._data = this._data
-        ? this._data + '&' + data
-        : data;
-    } else {
-      this._data = (this._data || '') + data;
-    }
-  } else {
-    this._data = data;
-  }
-
-  if (!obj) return this;
-  if (!type) this.type('json');
-  return this;
-};
-
-/**
- * Invoke the callback with `err` and `res`
- * and handle arity check.
- *
- * @param {Error} err
- * @param {Response} res
- * @api private
- */
-
-Request.prototype.callback = function(err, res){
-  var fn = this._callback;
-  if (2 == fn.length) return fn(err, res);
-  if (err) return this.emit('error', err);
-  fn(res);
-};
-
-/**
- * Invoke callback with x-domain error.
- *
- * @api private
- */
-
-Request.prototype.crossDomainError = function(){
-  var err = new Error('Origin is not allowed by Access-Control-Allow-Origin');
-  err.crossDomain = true;
-  this.callback(err);
-};
-
-/**
- * Invoke callback with timeout error.
- *
- * @api private
- */
-
-Request.prototype.timeoutError = function(){
-  var timeout = this._timeout;
-  var err = new Error('timeout of ' + timeout + 'ms exceeded');
-  err.timeout = timeout;
-  this.callback(err);
-};
-
-/**
- * Enable transmission of cookies with x-domain requests.
- *
- * Note that for this to work the origin must not be
- * using "Access-Control-Allow-Origin" with a wildcard,
- * and also must set "Access-Control-Allow-Credentials"
- * to "true".
- *
- * @api public
- */
-
-Request.prototype.withCredentials = function(){
-  this._withCredentials = true;
-  return this;
-};
-
-/**
- * Initiate request, invoking callback `fn(res)`
- * with an instanceof `Response`.
- *
- * @param {Function} fn
- * @return {Request} for chaining
- * @api public
- */
-
-Request.prototype.end = function(fn){
-  var self = this;
-  var xhr = this.xhr = getXHR();
-  var query = this._query.join('&');
-  var timeout = this._timeout;
-  var data = this._data;
-
-  // store callback
-  this._callback = fn || noop;
-
-  // state change
-  xhr.onreadystatechange = function(){
-    if (4 != xhr.readyState) return;
-    if (0 == xhr.status) {
-      if (self.aborted) return self.timeoutError();
-      return self.crossDomainError();
-    }
-    self.emit('end');
-  };
-
-  // progress
-  if (xhr.upload) {
-    xhr.upload.onprogress = function(e){
-      e.percent = e.loaded / e.total * 100;
-      self.emit('progress', e);
-    };
-  }
-
-  // timeout
-  if (timeout && !this._timer) {
-    this._timer = setTimeout(function(){
-      self.abort();
-    }, timeout);
-  }
-
-  // querystring
-  if (query) {
-    query = request.serializeObject(query);
-    this.url += ~this.url.indexOf('?')
-      ? '&' + query
-      : '?' + query;
-  }
-
-  // initiate request
-  xhr.open(this.method, this.url, true);
-
-  // CORS
-  if (this._withCredentials) xhr.withCredentials = true;
-
-  // body
-  if ('GET' != this.method && 'HEAD' != this.method && 'string' != typeof data && !isHost(data)) {
-    // serialize stuff
-    var serialize = request.serialize[this.getHeader('Content-Type')];
-    if (serialize) data = serialize(data);
-  }
-
-  // set header fields
-  for (var field in this.header) {
-    if (null == this.header[field]) continue;
-    xhr.setRequestHeader(field, this.header[field]);
-  }
-
-  // send stuff
-  this.emit('request', this);
-  xhr.send(data);
-  return this;
-};
-
-/**
- * Expose `Request`.
- */
-
-request.Request = Request;
-
-/**
- * Issue a request:
- *
- * Examples:
- *
- *    request('GET', '/users').end(callback)
- *    request('/users').end(callback)
- *    request('/users', callback)
- *
- * @param {String} method
- * @param {String|Function} url or callback
- * @return {Request}
- * @api public
- */
-
-function request(method, url) {
-  // callback
-  if ('function' == typeof url) {
-    return new Request('GET', method).end(url);
-  }
-
-  // url first
-  if (1 == arguments.length) {
-    return new Request('GET', method);
-  }
-
-  return new Request(method, url);
-}
-
-/**
- * GET `url` with optional callback `fn(res)`.
- *
- * @param {String} url
- * @param {Mixed|Function} data or fn
- * @param {Function} fn
- * @return {Request}
- * @api public
- */
-
-request.get = function(url, data, fn){
-  var req = request('GET', url);
-  if ('function' == typeof data) fn = data, data = null;
-  if (data) req.query(data);
-  if (fn) req.end(fn);
-  return req;
-};
-
-/**
- * HEAD `url` with optional callback `fn(res)`.
- *
- * @param {String} url
- * @param {Mixed|Function} data or fn
- * @param {Function} fn
- * @return {Request}
- * @api public
- */
-
-request.head = function(url, data, fn){
-  var req = request('HEAD', url);
-  if ('function' == typeof data) fn = data, data = null;
-  if (data) req.send(data);
-  if (fn) req.end(fn);
-  return req;
-};
-
-/**
- * DELETE `url` with optional callback `fn(res)`.
- *
- * @param {String} url
- * @param {Function} fn
- * @return {Request}
- * @api public
- */
-
-request.del = function(url, fn){
-  var req = request('DELETE', url);
-  if (fn) req.end(fn);
-  return req;
-};
-
-/**
- * PATCH `url` with optional `data` and callback `fn(res)`.
- *
- * @param {String} url
- * @param {Mixed} data
- * @param {Function} fn
- * @return {Request}
- * @api public
- */
-
-request.patch = function(url, data, fn){
-  var req = request('PATCH', url);
-  if ('function' == typeof data) fn = data, data = null;
-  if (data) req.send(data);
-  if (fn) req.end(fn);
-  return req;
-};
-
-/**
- * POST `url` with optional `data` and callback `fn(res)`.
- *
- * @param {String} url
- * @param {Mixed} data
- * @param {Function} fn
- * @return {Request}
- * @api public
- */
-
-request.post = function(url, data, fn){
-  var req = request('POST', url);
-  if ('function' == typeof data) fn = data, data = null;
-  if (data) req.send(data);
-  if (fn) req.end(fn);
-  return req;
-};
-
-/**
- * PUT `url` with optional `data` and callback `fn(res)`.
- *
- * @param {String} url
- * @param {Mixed|Function} data or fn
- * @param {Function} fn
- * @return {Request}
- * @api public
- */
-
-request.put = function(url, data, fn){
-  var req = request('PUT', url);
-  if ('function' == typeof data) fn = data, data = null;
-  if (data) req.send(data);
-  if (fn) req.end(fn);
-  return req;
-};
-
-/**
- * Expose `request`.
- */
-
-module.exports = request;
-
-});
-
-require.register("component~search.js@1.1.0", function (exports, module) {
-
-var crawler = search.crawler = require("component~search.js@1.1.0/client/crawler.js");
-var fns = require("component~search.js@1.1.0/lib/functions.js");
-
-module.exports = search
-
-/**
- * Right now, `query` must be a string,
- * and we'll search intelligently based on it.
- * In the future, we should allow options
- * like the node version.
- */
-
-function search(query, limit) {
-  query = (query || '').toLowerCase().trim();
-
-  // don't need to show every component
-  if (!query) {
-    return crawler.components
-      .sort(fns.sortBy.starsAndWatchers)
-      .slice(0, limit || 25);
-  }
-
-  // search by <user>/<repo>
-  if (/^[\w-]+\//.test(query)) {
-    return crawler.components
-      .filter(function (json) {
-        return !json.github.full_name.indexOf(query);
-      })
-      .sort(function (a, b) {
-        // sort by the length of the name, ascending
-        return a.github.full_name.length
-          - b.github.full_name.length;
-      })
-      .slice(0, limit || 25)
-  }
-
-  var filters = [];
-
-  filters.push(fns.filterBy.text(query));
-
-  query.split(/\s*/)
-    .filter(Boolean)
-    .filter(function (keyword) {
-      // check only alphanumerics
-      return /^\w+$/.test(keyword);
-    })
-    .forEach(function (keyword) {
-      filters.push(fns.filterBy.keyword(keyword));
-    })
-
-  return crawler.components
-    .filter(function (json) {
-      return filters.some(function (filter) {
-        return filter(json);
-      });
-    })
-    .sort(fns.sortBy.starsAndWatchers)
-    .slice(0, limit || 25);
-}
-});
-
-require.register("component~search.js@1.1.0/client/crawler.js", function (exports, module) {
-
-/**
- * Load all the components from the crawler.
- */
-
-var request = require("visionmedia~superagent@0.17.0");
-
-var loaded = false;
-var loading = false;
-var queue = [];
-
-module.exports = crawler;
-
-// automatically load all the crawled data on page load
-crawler();
-
-function crawler(done) {
-  done = done || noop;
-  if (loaded) return done();
-  if (loading) return queue.push(done);
-  loading = true;
-
-  request
-  .get('http://component-crawler.herokuapp.com/.json')
-  .end(function (err, res) {
-    crawler.users = res.body.users;
-    crawler.components = res.body.components;
-
-    loaded = true;
-    loading = false;
-    done();
-    while (queue.length) queue.shift()();
-  })
-}
-
-function noop(){}
-
-});
-
-require.register("component~search.js@1.1.0/lib/functions.js", function (exports, module) {
-
-exports.filterBy = {
-  owner: function (owner) {
-    return function (json) {
-      return json.github.owner.login === owner;
-    }
-  },
-  keyword: function (keyword) {
-    return function (json) {
-      var keywords = json.keywords;
-      if (!keywords) return false;
-      return ~json.keywords.indexOf(keyword);
-    }
-  },
-  text: function (string) {
-    string = escapeRegExp(string).trim();
-    var terms = string.split(/\s+/);
-    var re = new RegExp(terms.join('.* .*'), 'i');
-    return function (json) {
-      return re.test(json.name)
-        || re.test(json.description)
-        || re.test(json.github.full_name);
-    }
-  }
-}
-
-exports.sortBy = {
-  starsAndWatchers: function (a, b) {
-    return followScore(b) - followScore(a);
-  }
-}
-
-function followScore(json) {
-  var watchers = json.github.subscribers_count || 0;
-  var stars = json.github.stargazers_count || 0;
-  return watchers * 10 + stars;
-}
-
-function escapeRegExp(str) {
-  return String(str).replace(/([.*+?=^!:${}()|[\]\/\\])/g, '\\$1');
-}
-});
-
 require.register("component~autoscale-canvas@0.0.3", function (exports, module) {
 
 /**
@@ -4193,7 +4498,7 @@ module.exports = function(canvas){
 };
 });
 
-require.register("component~raf@1.1.3", function (exports, module) {
+require.register("component~raf@1.2.0", function (exports, module) {
 /**
  * Expose `requestAnimationFrame()`.
  */
@@ -4201,8 +4506,6 @@ require.register("component~raf@1.1.3", function (exports, module) {
 exports = module.exports = window.requestAnimationFrame
   || window.webkitRequestAnimationFrame
   || window.mozRequestAnimationFrame
-  || window.oRequestAnimationFrame
-  || window.msRequestAnimationFrame
   || fallback;
 
 /**
@@ -4225,8 +4528,6 @@ function fallback(fn) {
 var cancel = window.cancelAnimationFrame
   || window.webkitCancelAnimationFrame
   || window.mozCancelAnimationFrame
-  || window.oCancelAnimationFrame
-  || window.msCancelAnimationFrame
   || window.clearTimeout;
 
 exports.cancel = function(id){
@@ -4241,8 +4542,8 @@ require.register("component~spinner@1.0.0", function (exports, module) {
  * Module dependencies.
  */
 
-var autoscale = require("component~autoscale-canvas@0.0.3");
-var raf = require("component~raf@1.1.3");
+var autoscale = require('component~autoscale-canvas@0.0.3');
+var raf = require('component~raf@1.2.0');
 
 /**
  * Expose `Spinner`.
@@ -4431,46 +4732,13 @@ Spinner.prototype.draw = function(ctx){
 
 });
 
-require.register("./lib/error", function (exports, module) {
-
-/**
- * Module dependencies.
- */
-
-var tmpl = require("./lib/error/template.html");
-var reactive = require("component~reactive@1.1.0");
-var domify = require("component~domify@1.2.2");
-
-/**
- * Expose `ErrorView`.
- */
-
-module.exports = ErrorView;
-
-/**
- * Initialize a new error view.
- *
- * @param {Object} error
- * @api public
- */
-
-function ErrorView(error) {
-  this.error = error;
-  this.el = domify(tmpl);
-  this.view = reactive(this.el, error, this);
-}
-
-});
-
-require.define("./lib/error/template.html", "<div class='error'>\n  <h2 data-text='title'></h2>\n  <p data-text='msg'></p>\n</div>\n");
-
 require.register("./lib/list", function (exports, module) {
 
 /**
  * Module dependencies.
  */
 
-var ComponentView = require("./lib/list/view.js");
+var ComponentView = require('./lib/list/view.js');
 
 /**
  * Expose `List`.
@@ -4521,9 +4789,9 @@ require.register("./lib/list/view.js", function (exports, module) {
  * Module dependencies.
  */
 
-var reactive = require("component~reactive@1.1.0");
+var reactive = require('component~reactive@1.1.0');
 
-var tmpl = require("component~domify@1.2.2")(require("./lib/list/template.html"));
+var tmpl = require('component~domify@1.2.2')(require('./lib/list/template.html'));
 
 /**
  * Expose `ComponentView`.
@@ -4573,20 +4841,53 @@ ComponentView.prototype.stars = function () {
 
 require.define("./lib/list/template.html", "<div class='component'>\n  <header class='header'>\n    <h3><a data-href='url' data-text='name'></a></h3>\n    <a class='repo' data-text='repository' data-href='url'></a>\n  </header>\n  <table class='info'>\n    <tr>\n      <td>Stars</td>\n      <td data-text='stars'></td>\n    </tr>\n    <tr>\n      <td>License</td>\n      <td data-text='license'></td>\n    </tr>\n  </table>\n  <p data-text='description'></p>\n</div>\n");
 
+require.register("./lib/error", function (exports, module) {
+
+/**
+ * Module dependencies.
+ */
+
+var tmpl = require('./lib/error/template.html');
+var reactive = require('component~reactive@1.1.0');
+var domify = require('component~domify@1.2.2');
+
+/**
+ * Expose `ErrorView`.
+ */
+
+module.exports = ErrorView;
+
+/**
+ * Initialize a new error view.
+ *
+ * @param {Object} error
+ * @api public
+ */
+
+function ErrorView(error) {
+  this.error = error;
+  this.el = domify(tmpl);
+  this.view = reactive(this.el, error, this);
+}
+
+});
+
+require.define("./lib/error/template.html", "<div class='error'>\n  <h2 data-text='title'></h2>\n  <p data-text='msg'></p>\n</div>\n");
+
 require.register("./lib/search", function (exports, module) {
 
 /**
  * Module dependencies.
  */
 
-var List = require("./lib/list");
-var ErrorView = require("./lib/error");
-var reactive = require("component~reactive@1.1.0");
-var Spinner = require("component~spinner@1.0.0");
-var Emitter = require("component~emitter@1.1.2");
-var domify = require("component~domify@1.2.2");
-var tmpl = require("./lib/search/template.html");
-var search = require("component~search.js@1.1.0");
+var List = require('./lib/list');
+var ErrorView = require('./lib/error');
+var reactive = require('component~reactive@1.1.0');
+var Spinner = require('component~spinner@1.0.0');
+var Emitter = require('component~emitter@1.1.2');
+var domify = require('component~domify@1.2.2');
+var tmpl = require('./lib/search/template.html');
+var search = require('component~search.js@1.1.0');
 
 /**
  * Expose `SearchView`.
@@ -4619,6 +4920,16 @@ function SearchView() {
 Emitter(SearchView.prototype);
 
 /**
+ * Set the value of the input.
+ *
+ * @api public
+ */
+
+SearchView.prototype.input = function(query){
+  this.el.querySelector('input').value = query;
+};
+
+/**
  * Focus on the input.
  *
  * @api public
@@ -4634,7 +4945,8 @@ SearchView.prototype.focus = function(){
 
 SearchView.prototype.search = function(e){
   var self = this;
-  var str = e.target.value;
+  var targetEl = (e && e.target) || this.el.querySelector('input');
+  var str = targetEl.value;
 
   if (!str) return self.emit('query', '');
   if (str.length < 2) return;
@@ -4642,9 +4954,9 @@ SearchView.prototype.search = function(e){
 
   this.timer = setTimeout(function(){
     self.timer = null;
-    self.emit('query', e.target.value);
+    self.emit('query', str);
     analytics.track('query', {
-      query: e.target.value
+      query: str
     });
   }, 100);
 };
@@ -4739,9 +5051,11 @@ require.register("./lib/boot", function (exports, module) {
  * Module dependencies.
  */
 
-var Search = require("./lib/search");
-var top = require("component~top@0.0.2");
-var k = require("yields~k@0.6.1")(window);
+var Search = require('./lib/search');
+var top = require('component~top@0.0.2');
+var k = require('yields~k@0.6.1')(window);
+var qs = require('component~querystring@1.3.1');
+
 
 // back to top
 
@@ -4777,7 +5091,14 @@ search.on('query', function(str){
   search.show(str);
 });
 
-search.show('');
+var initialQuery = qs.parse(location.search).q;
+if (!initialQuery || initialQuery.length < 2) {
+  initialQuery = '';
+}
+search.input(initialQuery);
+search.focus();
+search.search();
+
 });
 
-require("./lib/boot")
+require("./lib/boot");
