@@ -1,0 +1,24 @@
+{
+  "name": "component.github.io",
+  "version": "1.0.0",
+  "description": "The [component.github.io](http://component.github.io) website powered by [Component](https://github.com/componentjs/component).",
+  "main": "index.js",
+  "scripts": {
+    "build": "component build",
+    "serve": "serve ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/component/component.github.io.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/component/component.github.io/issues"
+  },
+  "homepage": "https://github.com/component/component.github.io",
+  "dependencies": {
+    "component": "^1.0.1",
+    "serve": "^1.4.0"
+  }
+}

@@ -10,16 +10,10 @@
 
 ## Running
 
-  Set up the builder:
+  Set up the builder and serve the files:
 
 ```
-$ npm i -g component@"^1.0.0"
-$ component build --watch
-```
-
-  Then serve the current static page:
-
-```
-$ npm i -g serve@"^1.4.0"
-$ serve .
+$ npm install"
+$ npm run build
+$ npm run serve
 ```
