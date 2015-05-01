@@ -13,7 +13,7 @@
   Set up the builder and serve the files:
 
 ```
-$ npm install"
+$ npm install
 $ npm run build
 $ npm run serve
 ```
