@@ -2700,7 +2700,7 @@ function crawler(done) {
   loading = true;
 
   request
-  .get('http://component-crawler.herokuapp.com/.json')
+  .get('https://component-crawler.herokuapp.com/.json')
   .end(function (err, res) {
     crawler.users = res.body.users;
     crawler.components = res.body.components;
